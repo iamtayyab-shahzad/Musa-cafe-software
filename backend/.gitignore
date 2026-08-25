@@ -1,0 +1,30 @@
+# Binaries
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binaries
+*.test
+
+# Coverage
+coverage.out
+
+# Dependencies
+vendor/
+
+# Environment files (keep secrets local; never commit them)
+.env
+.env.*
+!.env.example
+
+# Generated product photos (uploaded to Cloudinary; not source)
+generated-images/
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

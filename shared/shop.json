@@ -1,0 +1,30 @@
+{
+  "name": "Musa Cafe",
+  "shortName": "Musa",
+  "tagline": "Taste With Quality",
+  "phone": "03095997786",
+  "alternatePhone": "",
+  "whatsapp": "923095997786",
+  "openingTime": "10:00 AM",
+  "closingTime": "12:00 AM",
+  "currency": "Rs",
+  "address": "Waan Wala Pul, Musa Khel",
+  "deliveryNote": "Express delivery available — call now",
+  "thankYouNote": "THANK YOU FOR CHOOSING MUSA CAFE!",
+  "contactPerson": "Musa Cafe Musa Khel",
+  "siteUrl": "http://localhost:3000",
+  "orderPrefix": "MC",
+  "storageKeyPrefix": "musacafe",
+  "posDbName": "musa-cafe-pos",
+  "defaultSiteTheme": "dark",
+  "logo": "/logo.svg",
+  "payments": {
+    "qrSrc": "",
+    "tillId": "",
+    "raastId": "",
+    "iban": "",
+    "jazzcashNumber": "",
+    "accountName": "",
+    "jazzcashUssd": ""
+  }
+}

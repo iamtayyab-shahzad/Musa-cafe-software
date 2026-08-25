@@ -1,0 +1,5 @@
+{
+  "restaurant": "Musa Cafe",
+  "note": "Inventory items cleared for Musa Cafe. Add stock items then run: go run ./cmd/seedinventory",
+  "items": []
+}

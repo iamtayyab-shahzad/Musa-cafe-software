@@ -1,0 +1,2232 @@
+{
+  "restaurant": {
+    "name": "Musa Cafe",
+    "tagline": "Taste With Quality",
+    "phone": "03095997786",
+    "alternatePhone": "",
+    "whatsapp": "923095997786",
+    "openingTime": "10:00 AM",
+    "closingTime": "12:00 AM",
+    "currency": "Rs",
+    "address": "Waan Wala Pul, Musa Khel",
+    "deliveryNote": "Express delivery available — call now",
+    "thankYouNote": "THANK YOU FOR CHOOSING MUSA CAFE!"
+  },
+  "promotions": [],
+  "notes": [
+    "Menu taken from Musa Cafe Pizza Hut printed flyers (Waan Wala Pul, Musa Khel).",
+    "Mighty Burger matches printed 'Mayte Burger'. Crispy Nachos listed under Sandwiches as on the flyer.",
+    "Products using placeholder.svg need a real photo from the shop."
+  ],
+  "locations": [
+    {
+      "id": "50000000-0000-4000-8000-000000000000",
+      "name": "In Store (Walk-in)",
+      "deliveryCharge": 0
+    },
+    {
+      "id": "50000000-0000-4000-8000-000000000001",
+      "name": "Local Delivery",
+      "deliveryCharge": 0
+    }
+  ],
+  "categories": [
+    {
+      "id": "10000000-0000-4000-8000-000000000001",
+      "name": "Deals",
+      "slug": "deals",
+      "image": "/products/deals/deal-1.webp",
+      "displayOrder": 1
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000002",
+      "name": "Shawarma",
+      "slug": "shawarma",
+      "image": "/products/rolls/malai-boti.webp",
+      "displayOrder": 2
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000003",
+      "name": "Spin Roll",
+      "slug": "spin-roll",
+      "image": "/products/rolls/spin.webp",
+      "displayOrder": 3
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000004",
+      "name": "Paratha Roll",
+      "slug": "paratha-roll",
+      "image": "/products/rolls/chicken-patty.webp",
+      "displayOrder": 4
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000005",
+      "name": "Tortilla Wraps",
+      "slug": "tortilla-wraps",
+      "image": "/products/rolls/arabic.webp",
+      "displayOrder": 5
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000006",
+      "name": "Burgers",
+      "slug": "burgers",
+      "image": "/products/burgers/zinger.webp",
+      "displayOrder": 6
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000007",
+      "name": "Sandwiches",
+      "slug": "sandwiches",
+      "image": "/products/sandwiches/bbq.webp",
+      "displayOrder": 7
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000008",
+      "name": "Regular Pizza",
+      "slug": "standard-pizza",
+      "image": "/products/pizzas/chicken-tika.webp",
+      "displayOrder": 8
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000009",
+      "name": "Special Pizza",
+      "slug": "special-pizza",
+      "image": "/products/pizzas/legend-malai.webp",
+      "displayOrder": 9
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000010",
+      "name": "Stuffed & Crust Pizza",
+      "slug": "stuffed-crust-pizza",
+      "image": "/products/pizzas/crown-crush.webp",
+      "displayOrder": 10
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000011",
+      "name": "Fried",
+      "slug": "fried",
+      "image": "/products/fried-chicken/hot-wings.webp",
+      "displayOrder": 11
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000012",
+      "name": "Fries",
+      "slug": "fries",
+      "image": "/products/fries/salted.webp",
+      "displayOrder": 12
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000013",
+      "name": "Pasta",
+      "slug": "pasta",
+      "image": "/products/pasta/creamy.webp",
+      "displayOrder": 13
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000014",
+      "name": "Broast",
+      "slug": "broast",
+      "image": "/products/fried-chicken/chicken-drum.webp",
+      "displayOrder": 14
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000015",
+      "name": "Salad Bar",
+      "slug": "salad-bar",
+      "image": "/products/placeholder.svg",
+      "displayOrder": 15
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000016",
+      "name": "Shakes",
+      "slug": "shakes",
+      "image": "/products/shakes/mango-shake.webp",
+      "displayOrder": 16
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000017",
+      "name": "Ice Cream",
+      "slug": "ice-cream",
+      "image": "/products/shakes/ice-cream-shake.webp",
+      "displayOrder": 17
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000018",
+      "name": "Cold Drinks",
+      "slug": "cold-drinks",
+      "image": "/products/cold-drinks/category.webp",
+      "displayOrder": 18
+    },
+    {
+      "id": "10000000-0000-4000-8000-000000000019",
+      "name": "Musa Specials",
+      "slug": "musa-specials",
+      "image": "/products/placeholder.svg",
+      "displayOrder": 19
+    }
+  ],
+  "products": [
+    {
+      "id": "20000000-0000-4000-8000-000000000001",
+      "category": "deals",
+      "name": "Burger Deal 450",
+      "description": "Plain fries + 1 zinger burger + cold drink 250ml.",
+      "image": "/products/deals/deal-1.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000002",
+      "category": "deals",
+      "name": "Burger Deal 999",
+      "description": "2 zinger burgers + 2 broast legs.",
+      "image": "/products/deals/deal-2.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 999
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000003",
+      "category": "deals",
+      "name": "Burger Deal 1299",
+      "description": "Plain fries + 3 zinger burgers + alfredo pasta small + cold drink 1.5 Ltr.",
+      "image": "/products/deals/deal-3.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 1299
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000004",
+      "category": "deals",
+      "name": "Burger Deal 1999",
+      "description": "Fries + 4 zinger burgers + nuggets 8 pcs + 1 club sandwich + cold drink 2.25 Ltr.",
+      "image": "/products/deals/deal-4.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 1999
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000005",
+      "category": "deals",
+      "name": "Pizza Deal 1",
+      "description": "Fries + 1 small pizza + cold drink 350ml.",
+      "image": "/products/deals/deal-1.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 650
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000006",
+      "category": "deals",
+      "name": "Pizza Deal 2",
+      "description": "Fries + 1 small pizza + crispy wings 3 pcs + cold drink 1.5 Ltr.",
+      "image": "/products/deals/deal-2.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 950
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000007",
+      "category": "deals",
+      "name": "Pizza Deal 3",
+      "description": "Fries + 1 medium pizza + crispy wings 6 pcs + cold drink 1 Ltr.",
+      "image": "/products/deals/deal-3.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 1550
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000008",
+      "category": "deals",
+      "name": "Pizza Deal 4",
+      "description": "Fries + 1 large pizza + 1 club sandwich + crispy wings 6 pcs + cold drink 1.5 Ltr.",
+      "image": "/products/deals/deal-4.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 2150
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000009",
+      "category": "deals",
+      "name": "Pizza Deal 5",
+      "description": "1 xl pizza + spin roll 4 pcs + alfredo pasta + nuggets 6 pcs + wings 6 pcs + cold drink 2.25 Ltr.",
+      "image": "/products/deals/deal-5.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 3750
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000010",
+      "category": "shawarma",
+      "name": "Shawarma",
+      "description": "Classic shawarma.",
+      "image": "/products/rolls/tika.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 150
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000011",
+      "category": "shawarma",
+      "name": "Special Shawarma",
+      "description": "Special shawarma.",
+      "image": "/products/rolls/malai-boti.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 250
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000012",
+      "category": "shawarma",
+      "name": "Zinger Shawarma",
+      "description": "Crispy zinger shawarma.",
+      "image": "/products/rolls/twister-patty.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 280
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000013",
+      "category": "shawarma",
+      "name": "Malai Boti Shawarma",
+      "description": "Malai boti shawarma.",
+      "image": "/products/rolls/malai-boti.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 350
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000014",
+      "category": "shawarma",
+      "name": "Platter Shawarma",
+      "description": "Shawarma platter.",
+      "image": "/products/rolls/shahi.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 300
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000015",
+      "category": "shawarma",
+      "name": "Pizza Shawarma",
+      "description": "Pizza-style shawarma.",
+      "image": "/products/rolls/totla.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000016",
+      "category": "shawarma",
+      "name": "Turkish Shawarma",
+      "description": "Turkish-style shawarma.",
+      "image": "/products/rolls/arabic.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 500
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000017",
+      "category": "spin-roll",
+      "name": "Kabab Roll",
+      "description": "Kabab spin roll.",
+      "image": "/products/rolls/spin.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 400
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000018",
+      "category": "spin-roll",
+      "name": "Behari Roll",
+      "description": "Behari spin roll.",
+      "image": "/products/rolls/bihari.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 430
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000019",
+      "category": "spin-roll",
+      "name": "Garlic Roll",
+      "description": "Garlic spin roll.",
+      "image": "/products/rolls/spin.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000020",
+      "category": "spin-roll",
+      "name": "Malai Boti Roll",
+      "description": "Malai boti spin roll.",
+      "image": "/products/rolls/malai-boti.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000021",
+      "category": "spin-roll",
+      "name": "Cheese Roll",
+      "description": "Cheese spin roll.",
+      "image": "/products/rolls/spin.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 500
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000022",
+      "category": "paratha-roll",
+      "name": "Chicken Paratha Roll",
+      "description": "Chicken paratha roll.",
+      "image": "/products/rolls/chicken-patty.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 300
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000023",
+      "category": "paratha-roll",
+      "name": "Twister Roll",
+      "description": "Twister paratha roll.",
+      "image": "/products/rolls/twister-patty.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 350
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000024",
+      "category": "paratha-roll",
+      "name": "Kabab Paratha Roll",
+      "description": "Kabab paratha roll.",
+      "image": "/products/rolls/chapli.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 300
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000025",
+      "category": "paratha-roll",
+      "name": "Malai Boti Paratha Roll",
+      "description": "Malai boti paratha roll.",
+      "image": "/products/rolls/malai-boti.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 350
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000026",
+      "category": "paratha-roll",
+      "name": "Cheese Paratha Roll",
+      "description": "Cheese paratha roll.",
+      "image": "/products/rolls/chicken-patty.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 350
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000027",
+      "category": "paratha-roll",
+      "name": "Pizza Paratha Roll",
+      "description": "Pizza paratha roll.",
+      "image": "/products/rolls/totla.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 400
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000028",
+      "category": "tortilla-wraps",
+      "name": "Zinger Wrap",
+      "description": "Zinger tortilla wrap.",
+      "image": "/products/rolls/kruncher-raps.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 400
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000029",
+      "category": "tortilla-wraps",
+      "name": "Malai Boti Wrap",
+      "description": "Malai boti wrap.",
+      "image": "/products/rolls/malai-boti.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000030",
+      "category": "tortilla-wraps",
+      "name": "Grill Wrap",
+      "description": "Grill wrap.",
+      "image": "/products/rolls/chicken-raps.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000031",
+      "category": "tortilla-wraps",
+      "name": "Arabic Wrap",
+      "description": "Arabic wrap.",
+      "image": "/products/rolls/arabic.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000032",
+      "category": "burgers",
+      "name": "Shami Burger",
+      "description": "Shami burger.",
+      "image": "/products/burgers/chicken-patty.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 120
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000033",
+      "category": "burgers",
+      "name": "Double Anda Burger",
+      "description": "Double egg burger.",
+      "image": "/products/burgers/chicken-patty.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 150
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000034",
+      "category": "burgers",
+      "name": "Chicken Burger",
+      "description": "Chicken burger.",
+      "image": "/products/burgers/chicken-patty.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 180
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000035",
+      "category": "burgers",
+      "name": "Patty Burger",
+      "description": "Chicken patty burger.",
+      "image": "/products/burgers/chicken-patty.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 200
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000036",
+      "category": "burgers",
+      "name": "Crispy Burger",
+      "description": "Crispy burger.",
+      "image": "/products/burgers/jalapeno-zinger.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 250
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000037",
+      "category": "burgers",
+      "name": "Tikka Burger",
+      "description": "Chicken tikka burger.",
+      "image": "/products/burgers/tikka.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 280
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000038",
+      "category": "burgers",
+      "name": "Zinger Burger",
+      "description": "Crispy zinger burger.",
+      "image": "/products/burgers/zinger.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 280
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000039",
+      "category": "burgers",
+      "name": "Mighty Burger",
+      "description": "Mighty burger (Mayte on printed menu).",
+      "image": "/products/burgers/mighty-zinger.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 300
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000040",
+      "category": "burgers",
+      "name": "Chapli Burger",
+      "description": "Chapli burger.",
+      "image": "/products/burgers/chapli.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 400
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000041",
+      "category": "burgers",
+      "name": "Pizza Burger",
+      "description": "Pizza burger.",
+      "image": "/products/burgers/pizza.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000042",
+      "category": "burgers",
+      "name": "Tower Burger",
+      "description": "Tower burger.",
+      "image": "/products/burgers/mighty-zinger.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 500
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000043",
+      "category": "burgers",
+      "name": "Grill Burger",
+      "description": "Grill burger.",
+      "image": "/products/burgers/tikka.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 500
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000044",
+      "category": "sandwiches",
+      "name": "Chicken Sandwich",
+      "description": "Chicken sandwich.",
+      "image": "/products/sandwiches/bbq.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 380
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000045",
+      "category": "sandwiches",
+      "name": "Special Sandwich",
+      "description": "Special sandwich.",
+      "image": "/products/sandwiches/kruncher-salad.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 430
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000046",
+      "category": "sandwiches",
+      "name": "Grill Sandwich",
+      "description": "Grill sandwich.",
+      "image": "/products/sandwiches/bbq.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000047",
+      "category": "sandwiches",
+      "name": "Tikka Sandwich",
+      "description": "Tikka sandwich.",
+      "image": "/products/sandwiches/bbq.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000048",
+      "category": "sandwiches",
+      "name": "Fajita Sandwich",
+      "description": "Fajita sandwich.",
+      "image": "/products/sandwiches/mexican.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000049",
+      "category": "sandwiches",
+      "name": "Club Sandwich",
+      "description": "Club sandwich.",
+      "image": "/products/sandwiches/kruncher-salad.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 500
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000050",
+      "category": "sandwiches",
+      "name": "Crispy Nachos",
+      "description": "Crispy nachos (listed with sandwiches).",
+      "image": "/products/placeholder.svg",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 650
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000051",
+      "category": "sandwiches",
+      "name": "Mexican Sandwich",
+      "description": "Mexican sandwich.",
+      "image": "/products/sandwiches/mexican.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 700
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000052",
+      "category": "sandwiches",
+      "name": "Crunch Sandwich",
+      "description": "Crunch sandwich.",
+      "image": "/products/sandwiches/kruncher-salad.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 750
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000053",
+      "category": "sandwiches",
+      "name": "Musa Special Sandwich",
+      "description": "Musa Cafe signature sandwich.",
+      "image": "/products/sandwiches/mexican.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 1199
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000054",
+      "category": "standard-pizza",
+      "name": "CH-Tikka Pizza",
+      "description": "Chicken tikka pizza.",
+      "image": "/products/pizzas/chicken-tika.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Small",
+          "price": 599
+        },
+        {
+          "name": "Medium",
+          "price": 899
+        },
+        {
+          "name": "Large",
+          "price": 1250
+        },
+        {
+          "name": "XL",
+          "price": 1799
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000055",
+      "category": "standard-pizza",
+      "name": "CH-Fajita Pizza",
+      "description": "Chicken fajita pizza.",
+      "image": "/products/pizzas/chicken-fajita.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Small",
+          "price": 599
+        },
+        {
+          "name": "Medium",
+          "price": 899
+        },
+        {
+          "name": "Large",
+          "price": 1250
+        },
+        {
+          "name": "XL",
+          "price": 1799
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000056",
+      "category": "standard-pizza",
+      "name": "CH-Lover Pizza",
+      "description": "Chicken lover pizza.",
+      "image": "/products/pizzas/chicken-lover.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Small",
+          "price": 599
+        },
+        {
+          "name": "Medium",
+          "price": 999
+        },
+        {
+          "name": "Large",
+          "price": 1350
+        },
+        {
+          "name": "XL",
+          "price": 1799
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000057",
+      "category": "standard-pizza",
+      "name": "CH-Tandoori Pizza",
+      "description": "Chicken tandoori pizza.",
+      "image": "/products/pizzas/mughlai.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Small",
+          "price": 599
+        },
+        {
+          "name": "Medium",
+          "price": 999
+        },
+        {
+          "name": "Large",
+          "price": 1350
+        },
+        {
+          "name": "XL",
+          "price": 1799
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000058",
+      "category": "standard-pizza",
+      "name": "CH-Supreme Pizza",
+      "description": "Chicken supreme pizza.",
+      "image": "/products/pizzas/fifty-fifty.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Small",
+          "price": 599
+        },
+        {
+          "name": "Medium",
+          "price": 999
+        },
+        {
+          "name": "Large",
+          "price": 1350
+        },
+        {
+          "name": "XL",
+          "price": 1799
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000059",
+      "category": "standard-pizza",
+      "name": "BAR-B-Q Pizza",
+      "description": "BBQ pizza.",
+      "image": "/products/pizzas/bbq-pizza.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Small",
+          "price": 699
+        },
+        {
+          "name": "Medium",
+          "price": 999
+        },
+        {
+          "name": "Large",
+          "price": 1399
+        },
+        {
+          "name": "XL",
+          "price": 1799
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000060",
+      "category": "standard-pizza",
+      "name": "VEG Lover Pizza",
+      "description": "Vegetable lover pizza.",
+      "image": "/products/pizzas/vege-lover.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Small",
+          "price": 649
+        },
+        {
+          "name": "Medium",
+          "price": 949
+        },
+        {
+          "name": "Large",
+          "price": 1250
+        },
+        {
+          "name": "XL",
+          "price": 1799
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000061",
+      "category": "standard-pizza",
+      "name": "Hot & Spicy Pizza",
+      "description": "Hot and spicy pizza.",
+      "image": "/products/pizzas/hot-and-spicy.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Small",
+          "price": 699
+        },
+        {
+          "name": "Medium",
+          "price": 999
+        },
+        {
+          "name": "Large",
+          "price": 1399
+        },
+        {
+          "name": "XL",
+          "price": 1799
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000062",
+      "category": "special-pizza",
+      "name": "Malai Boti Pizza",
+      "description": "Malai boti special pizza.",
+      "image": "/products/pizzas/legend-malai.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Medium",
+          "price": 1099
+        },
+        {
+          "name": "Large",
+          "price": 1350
+        },
+        {
+          "name": "XL",
+          "price": 1899
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000063",
+      "category": "special-pizza",
+      "name": "Behari Kabab Pizza",
+      "description": "Behari kabab pizza.",
+      "image": "/products/pizzas/bihari-kabab.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Medium",
+          "price": 1099
+        },
+        {
+          "name": "Large",
+          "price": 1350
+        },
+        {
+          "name": "XL",
+          "price": 1899
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000064",
+      "category": "special-pizza",
+      "name": "Legend Malai Pizza",
+      "description": "Legend malai pizza.",
+      "image": "/products/pizzas/legend-malai.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Medium",
+          "price": 1099
+        },
+        {
+          "name": "Large",
+          "price": 1350
+        },
+        {
+          "name": "XL",
+          "price": 1899
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000065",
+      "category": "special-pizza",
+      "name": "Peri Peri Pizza",
+      "description": "Peri peri pizza.",
+      "image": "/products/pizzas/hot-and-spicy.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Medium",
+          "price": 1099
+        },
+        {
+          "name": "Large",
+          "price": 1350
+        },
+        {
+          "name": "XL",
+          "price": 1899
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000066",
+      "category": "special-pizza",
+      "name": "Lazania Pizza",
+      "description": "Lazania pizza.",
+      "image": "/products/pizzas/lazania.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Medium",
+          "price": 1099
+        },
+        {
+          "name": "Large",
+          "price": 1350
+        },
+        {
+          "name": "XL",
+          "price": 1899
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000067",
+      "category": "stuffed-crust-pizza",
+      "name": "Crown Crust Pizza",
+      "description": "Crown crust pizza.",
+      "image": "/products/pizzas/crown-crush.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Medium",
+          "price": 1199
+        },
+        {
+          "name": "Large",
+          "price": 1450
+        },
+        {
+          "name": "XL",
+          "price": 1999
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000068",
+      "category": "stuffed-crust-pizza",
+      "name": "Kabab Crust Pizza",
+      "description": "Kabab crust pizza.",
+      "image": "/products/pizzas/kababish.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Medium",
+          "price": 1199
+        },
+        {
+          "name": "Large",
+          "price": 1450
+        },
+        {
+          "name": "XL",
+          "price": 1999
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000069",
+      "category": "stuffed-crust-pizza",
+      "name": "Royal Crust Pizza",
+      "description": "Royal crust pizza.",
+      "image": "/products/pizzas/rose-crown.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Medium",
+          "price": 1199
+        },
+        {
+          "name": "Large",
+          "price": 1450
+        },
+        {
+          "name": "XL",
+          "price": 1999
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000070",
+      "category": "stuffed-crust-pizza",
+      "name": "Kabab Stuff Pizza",
+      "description": "Kabab stuffed pizza.",
+      "image": "/products/pizzas/kabab-stuff.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Medium",
+          "price": 1199
+        },
+        {
+          "name": "Large",
+          "price": 1450
+        },
+        {
+          "name": "XL",
+          "price": 1999
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000071",
+      "category": "stuffed-crust-pizza",
+      "name": "Cheese Stuff Pizza",
+      "description": "Cheese stuffed pizza.",
+      "image": "/products/pizzas/chicken-lover.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Medium",
+          "price": 1199
+        },
+        {
+          "name": "Large",
+          "price": 1450
+        },
+        {
+          "name": "XL",
+          "price": 1999
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000072",
+      "category": "stuffed-crust-pizza",
+      "name": "Double Layer Pizza",
+      "description": "Double layer pizza.",
+      "image": "/products/pizzas/kelazone.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Medium",
+          "price": 1399
+        },
+        {
+          "name": "Large",
+          "price": 1650
+        },
+        {
+          "name": "XL",
+          "price": 2250
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000073",
+      "category": "stuffed-crust-pizza",
+      "name": "Musa Special Pizza",
+      "description": "Musa Cafe signature pizza.",
+      "image": "/products/pizzas/krunchies-special.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Large",
+          "price": 1900
+        },
+        {
+          "name": "XL",
+          "price": 2400
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000074",
+      "category": "fried",
+      "name": "Nuggets",
+      "description": "Chicken nuggets (6 pcs).",
+      "image": "/products/fried-chicken/chicken-nuggets.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 280
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000075",
+      "category": "fried",
+      "name": "Hot Wings",
+      "description": "Hot wings (6 pcs).",
+      "image": "/products/fried-chicken/hot-wings.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 300
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000076",
+      "category": "fried",
+      "name": "Crispy Wings",
+      "description": "Crispy wings (6 pcs).",
+      "image": "/products/fried-chicken/bbq-wings.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 300
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000077",
+      "category": "fried",
+      "name": "Oven Baked Wing",
+      "description": "Oven baked wings (3 pcs).",
+      "image": "/products/fried-chicken/bbq-wings.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 350
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000078",
+      "category": "fried",
+      "name": "Hot Shot",
+      "description": "Hot shots (10 pcs).",
+      "image": "/products/fried-chicken/hotshots.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 400
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000079",
+      "category": "fried",
+      "name": "Drumsticks",
+      "description": "Chicken drumsticks (3 pcs).",
+      "image": "/products/fried-chicken/chicken-drum.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000080",
+      "category": "fries",
+      "name": "French Fries",
+      "description": "Salted french fries.",
+      "image": "/products/fries/salted.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Small",
+          "price": 150
+        },
+        {
+          "name": "Large",
+          "price": 280
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000081",
+      "category": "fries",
+      "name": "Masala Fries",
+      "description": "Masala fries.",
+      "image": "/products/fries/masala.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Small",
+          "price": 150
+        },
+        {
+          "name": "Large",
+          "price": 280
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000082",
+      "category": "fries",
+      "name": "Mayo Fries",
+      "description": "Mayo fries.",
+      "image": "/products/fries/salted.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Small",
+          "price": 150
+        },
+        {
+          "name": "Large",
+          "price": 280
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000083",
+      "category": "fries",
+      "name": "Loaded Fries",
+      "description": "Loaded fries.",
+      "image": "/products/fries/loaded.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Small",
+          "price": 400
+        },
+        {
+          "name": "Large",
+          "price": 500
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000084",
+      "category": "fries",
+      "name": "Matka Fries",
+      "description": "Matka fries.",
+      "image": "/products/fries/loaded.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000085",
+      "category": "fries",
+      "name": "Pizza Fries",
+      "description": "Pizza fries.",
+      "image": "/products/fries/pizza.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000086",
+      "category": "pasta",
+      "name": "Macaroni Pasta",
+      "description": "Macaroni pasta.",
+      "image": "/products/pasta/spegiti.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Small",
+          "price": 300
+        },
+        {
+          "name": "Large",
+          "price": 550
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000087",
+      "category": "pasta",
+      "name": "Creamy Pasta",
+      "description": "Creamy pasta.",
+      "image": "/products/pasta/creamy.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Small",
+          "price": 300
+        },
+        {
+          "name": "Large",
+          "price": 550
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000088",
+      "category": "pasta",
+      "name": "Crispy Pasta",
+      "description": "Crispy pasta.",
+      "image": "/products/pasta/chicken.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Small",
+          "price": 300
+        },
+        {
+          "name": "Large",
+          "price": 550
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000089",
+      "category": "pasta",
+      "name": "Alfredo Pasta",
+      "description": "Alfredo pasta.",
+      "image": "/products/pasta/creamy.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Small",
+          "price": 300
+        },
+        {
+          "name": "Large",
+          "price": 550
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000090",
+      "category": "pasta",
+      "name": "Loaded Pasta",
+      "description": "Loaded pasta.",
+      "image": "/products/pasta/loaded.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Small",
+          "price": 300
+        },
+        {
+          "name": "Large",
+          "price": 550
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000091",
+      "category": "pasta",
+      "name": "Oven Baked Pasta",
+      "description": "Oven baked pasta.",
+      "image": "/products/pasta/kala-mada.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Small",
+          "price": 300
+        },
+        {
+          "name": "Large",
+          "price": 550
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000092",
+      "category": "broast",
+      "name": "Broast Leg",
+      "description": "Broast leg piece.",
+      "image": "/products/fried-chicken/chicken-drum.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 300
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000093",
+      "category": "broast",
+      "name": "Broast Chest",
+      "description": "Broast chest piece.",
+      "image": "/products/fried-chicken/chicken-drum.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 400
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000094",
+      "category": "broast",
+      "name": "Fried Chicken",
+      "description": "Fried chicken (3 pcs).",
+      "image": "/products/fried-chicken/chicken-drum.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 700
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000095",
+      "category": "broast",
+      "name": "Full Chargha",
+      "description": "Full chargha.",
+      "image": "/products/fried-chicken/chicken-drum.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 1500
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000096",
+      "category": "salad-bar",
+      "name": "Dahi Bhalla",
+      "description": "Dahi bhalla.",
+      "image": "/products/placeholder.svg",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 150
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000097",
+      "category": "salad-bar",
+      "name": "Musa Special Dahi Bhalla",
+      "description": "Musa special dahi bhalla.",
+      "image": "/products/placeholder.svg",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 200
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000098",
+      "category": "salad-bar",
+      "name": "Gol Gappay 6 PCS",
+      "description": "Gol gappay (6 pcs).",
+      "image": "/products/placeholder.svg",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 120
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000099",
+      "category": "salad-bar",
+      "name": "Gol Gappay 12 PCS",
+      "description": "Gol gappay (12 pcs).",
+      "image": "/products/placeholder.svg",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 240
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000100",
+      "category": "salad-bar",
+      "name": "Chana Chat",
+      "description": "Chana chat.",
+      "image": "/products/placeholder.svg",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 200
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000101",
+      "category": "salad-bar",
+      "name": "Fruit Chat",
+      "description": "Fruit chat.",
+      "image": "/products/placeholder.svg",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 250
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000102",
+      "category": "salad-bar",
+      "name": "Cream Chat",
+      "description": "Cream chat.",
+      "image": "/products/placeholder.svg",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 300
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000103",
+      "category": "salad-bar",
+      "name": "Russian Salad",
+      "description": "Russian salad.",
+      "image": "/products/placeholder.svg",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 400
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000104",
+      "category": "shakes",
+      "name": "Mint Margarita",
+      "description": "Mint margarita.",
+      "image": "/products/shakes/mint-margretta.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 180
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000105",
+      "category": "shakes",
+      "name": "Apple Shake",
+      "description": "Apple shake.",
+      "image": "/products/shakes/apple-shake.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 180
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000106",
+      "category": "shakes",
+      "name": "Banana Shake",
+      "description": "Banana shake.",
+      "image": "/products/shakes/banana-shake.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 180
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000107",
+      "category": "shakes",
+      "name": "Mango Shake",
+      "description": "Mango shake.",
+      "image": "/products/shakes/mango-shake.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 180
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000108",
+      "category": "shakes",
+      "name": "Lemonade",
+      "description": "Fresh lemonade.",
+      "image": "/products/placeholder.svg",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 100
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000109",
+      "category": "shakes",
+      "name": "Blue Berry",
+      "description": "Blueberry shake.",
+      "image": "/products/placeholder.svg",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 250
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000110",
+      "category": "shakes",
+      "name": "Caramel Shake",
+      "description": "Caramel shake.",
+      "image": "/products/placeholder.svg",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 250
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000111",
+      "category": "shakes",
+      "name": "Strawberry Shake",
+      "description": "Strawberry shake.",
+      "image": "/products/placeholder.svg",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 250
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000112",
+      "category": "shakes",
+      "name": "Pink Lady",
+      "description": "Pink lady shake.",
+      "image": "/products/placeholder.svg",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 250
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000113",
+      "category": "shakes",
+      "name": "Vanilla Shake",
+      "description": "Vanilla shake.",
+      "image": "/products/shakes/ice-cream-shake.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 200
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000114",
+      "category": "shakes",
+      "name": "Ice Cream Shake",
+      "description": "Ice cream shake.",
+      "image": "/products/shakes/ice-cream-shake.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 200
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000115",
+      "category": "shakes",
+      "name": "Oreo Shake",
+      "description": "Oreo shake.",
+      "image": "/products/placeholder.svg",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 200
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000116",
+      "category": "shakes",
+      "name": "Khoya Khajoor",
+      "description": "Khoya khajoor shake.",
+      "image": "/products/shakes/khoya-khajoor.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 280
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000117",
+      "category": "shakes",
+      "name": "Pina Colada",
+      "description": "Pina colada.",
+      "image": "/products/shakes/pino-colaudo.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 350
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000118",
+      "category": "shakes",
+      "name": "Power Shake",
+      "description": "Power shake.",
+      "image": "/products/shakes/apple-banana.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 400
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000119",
+      "category": "shakes",
+      "name": "Mix Dry Fruit",
+      "description": "Mix dry fruit shake.",
+      "image": "/products/shakes/khajoor-shake.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 400
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000120",
+      "category": "ice-cream",
+      "name": "Ice Cream Scoop",
+      "description": "Per scoop — Kulfa, Mango, Pista, Chocolate, Strawberry.",
+      "image": "/products/shakes/ice-cream-shake.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Kulfa",
+          "price": 80
+        },
+        {
+          "name": "Mango",
+          "price": 80
+        },
+        {
+          "name": "Pista",
+          "price": 80
+        },
+        {
+          "name": "Chocolate",
+          "price": 80
+        },
+        {
+          "name": "Strawberry",
+          "price": 80
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000121",
+      "category": "ice-cream",
+      "name": "Half Litre Ice Cream",
+      "description": "Half litre ice cream.",
+      "image": "/products/shakes/ice-cream-shake.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 250
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000122",
+      "category": "ice-cream",
+      "name": "Full Litre Ice Cream",
+      "description": "Full litre ice cream.",
+      "image": "/products/shakes/ice-cream-shake.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 450
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000123",
+      "category": "ice-cream",
+      "name": "Rabri Bottle",
+      "description": "Rabri bottle.",
+      "image": "/products/placeholder.svg",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 200
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000124",
+      "category": "ice-cream",
+      "name": "Rabri Dodh",
+      "description": "Rabri dodh.",
+      "image": "/products/placeholder.svg",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 200
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000125",
+      "category": "cold-drinks",
+      "name": "Soft Drink",
+      "description": "Bottled soft drink — choose flavour at checkout.",
+      "image": "/products/cold-drinks/soft-drink.webp",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "500ml",
+          "price": 120
+        },
+        {
+          "name": "1 Ltr",
+          "price": 200
+        },
+        {
+          "name": "1.5 Ltr",
+          "price": 250
+        },
+        {
+          "name": "2.25 Ltr",
+          "price": 300
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000126",
+      "category": "cold-drinks",
+      "name": "Mineral Water Small",
+      "description": "Small mineral water.",
+      "image": "/products/cold-drinks/mineral-water-small.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 80
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000127",
+      "category": "cold-drinks",
+      "name": "Mineral Water Large",
+      "description": "Large mineral water.",
+      "image": "/products/cold-drinks/mineral-water-large.webp",
+      "featured": false,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 150
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000128",
+      "category": "musa-specials",
+      "name": "Tea",
+      "description": "Hot tea.",
+      "image": "/products/placeholder.svg",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 50
+        }
+      ]
+    },
+    {
+      "id": "20000000-0000-4000-8000-000000000129",
+      "category": "musa-specials",
+      "name": "Samosa",
+      "description": "Samosa.",
+      "image": "/products/placeholder.svg",
+      "featured": true,
+      "sizes": [
+        {
+          "name": "Regular",
+          "price": 30
+        }
+      ]
+    }
+  ]
+}

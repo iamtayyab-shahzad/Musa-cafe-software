@@ -1,0 +1,478 @@
+openapi: 3.0.3
+info:
+  title: Krunchies Backend API
+  version: 1.0.0
+  description: Restaurant management REST API for Krunchies Pizza (POS, website, orders, inventory, analytics).
+servers:
+  - url: http://localhost:8080
+    description: Local development
+tags:
+  - name: auth
+  - name: orders
+  - name: catalog
+  - name: inventory
+  - name: payments
+  - name: analytics
+  - name: settings
+paths:
+  /api/v1/auth/staff/login:
+    post:
+      tags: [auth]
+      summary: Staff login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffLoginRequest'
+      responses:
+        '200':
+          description: JWT token
+  /api/v1/auth/customers/register:
+    post:
+      tags: [auth]
+      summary: Customer registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRegisterRequest'
+      responses:
+        '201':
+          description: Customer + token
+  /api/v1/auth/customers/login:
+    post:
+      tags: [auth]
+      summary: Customer login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerLoginRequest'
+      responses:
+        '200':
+          description: JWT token
+  /api/v1/orders:
+    post:
+      tags: [orders]
+      summary: Create website/guest order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Created order
+  /api/v1/orders/phone:
+    post:
+      tags: [orders]
+      summary: Create phone order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Created phone order
+  /api/v1/orders/walkin:
+    post:
+      tags: [orders]
+      summary: Create walk-in order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Created walk-in order
+  /api/v1/orders/pending:
+    get:
+      tags: [orders]
+      summary: List pending orders
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Pending orders
+  /api/v1/orders/{id}:
+    get:
+      tags: [orders]
+      summary: Get order by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UUID'
+      responses:
+        '200':
+          description: Order details
+    put:
+      tags: [orders]
+      summary: Update order
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UUID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrderRequest'
+      responses:
+        '200':
+          description: Updated
+    delete:
+      tags: [orders]
+      summary: Delete order
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UUID'
+      responses:
+        '200':
+          description: Deleted
+  /api/v1/orders/{id}/complete:
+    patch:
+      tags: [orders]
+      summary: Complete order (consumes inventory)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UUID'
+      responses:
+        '200':
+          description: Completed
+  /api/v1/orders/{id}/cancel:
+    patch:
+      tags: [orders]
+      summary: Cancel order
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UUID'
+      responses:
+        '200':
+          description: Cancelled
+  /api/v1/categories:
+    get:
+      tags: [catalog]
+      summary: List categories
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Category list
+    post:
+      tags: [catalog]
+      summary: Create category
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Created
+  /api/v1/products:
+    get:
+      tags: [catalog]
+      summary: List products
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Product list
+  /api/v1/product-sizes:
+    get:
+      tags: [catalog]
+      summary: List product sizes
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Size list
+  /api/v1/locations:
+    get:
+      tags: [catalog]
+      summary: List delivery locations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Location list
+  /api/v1/offers:
+    get:
+      tags: [catalog]
+      summary: List offers
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Offer list
+  /api/v1/inventory:
+    get:
+      tags: [inventory]
+      summary: List inventory
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Inventory list
+  /api/v1/recipes:
+    get:
+      tags: [inventory]
+      summary: List recipes
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Recipe list
+  /api/v1/payments:
+    get:
+      tags: [payments]
+      summary: List payments
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Payment list
+    post:
+      tags: [payments]
+      summary: Create payment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentRequest'
+      responses:
+        '201':
+          description: Created
+  /api/v1/analytics/today-sales:
+    get:
+      tags: [analytics]
+      summary: Today's sales
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Total
+  /api/v1/analytics/weekly-sales:
+    get:
+      tags: [analytics]
+      summary: Weekly sales
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Total
+  /api/v1/analytics/monthly-sales:
+    get:
+      tags: [analytics]
+      summary: Monthly sales
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Total
+  /api/v1/analytics/best-selling-products:
+    get:
+      tags: [analytics]
+      summary: Top selling products
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Ranked products
+  /api/v1/analytics/payment-breakdown:
+    get:
+      tags: [analytics]
+      summary: Payment method breakdown
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Breakdown
+  /api/v1/analytics/low-stock:
+    get:
+      tags: [analytics]
+      summary: Low stock items
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Inventory below minimum
+  /api/v1/settings:
+    get:
+      tags: [settings]
+      summary: Get restaurant settings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Settings
+    put:
+      tags: [settings]
+      summary: Update restaurant settings
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSettingsRequest'
+      responses:
+        '200':
+          description: Updated settings
+  /api/v1/settings/public:
+    get:
+      tags: [settings]
+      summary: Public settings (no auth)
+      responses:
+        '200':
+          description: Settings
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    UUID:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    StaffLoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    CustomerRegisterRequest:
+      type: object
+      required: [name, phone, password]
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        password:
+          type: string
+    CustomerLoginRequest:
+      type: object
+      required: [phone, password]
+      properties:
+        phone:
+          type: string
+        password:
+          type: string
+    CreateOrderItemRequest:
+      type: object
+      required: [product_id, product_size_id, quantity]
+      properties:
+        product_id:
+          type: string
+          format: uuid
+        product_size_id:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+    CreateOrderRequest:
+      type: object
+      required: [customer_name, phone, location_id, payment_method, items]
+      properties:
+        customer_name:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        location_id:
+          type: string
+          format: uuid
+        payment_method:
+          type: string
+          enum: [cash, easypaisa, jazzcash, card, cod]
+        order_notes:
+          type: string
+        is_guest:
+          type: boolean
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateOrderItemRequest'
+    UpdateOrderRequest:
+      type: object
+      properties:
+        customer_name:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        location_id:
+          type: string
+          format: uuid
+        payment_method:
+          type: string
+        order_notes:
+          type: string
+        order_status:
+          type: string
+          enum: [PENDING, COMPLETED, CANCELLED]
+    CreatePaymentRequest:
+      type: object
+      required: [order_id, method, amount, status]
+      properties:
+        order_id:
+          type: string
+          format: uuid
+        method:
+          type: string
+        amount:
+          type: integer
+        status:
+          type: string
+        reference:
+          type: string
+    UpdateSettingsRequest:
+      type: object
+      properties:
+        restaurant_name:
+          type: string
+        phone:
+          type: string
+        whatsapp:
+          type: string
+        logo:
+          type: string
+        opening_time:
+          type: string
+        closing_time:
+          type: string
+        cash_on_delivery_fee:
+          type: integer
+        currency:
+          type: string
+        google_maps:
+          type: string
+        facebook:
+          type: string
+        instagram:
+          type: string

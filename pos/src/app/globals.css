@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+:root {
+  --background: #050505;
+  --foreground: #fafafa;
+  --accent: #f97316;
+  --pos-surface: #09090b;
+  --pos-surface-2: #18181b;
+  --pos-border: #27272a;
+  --pos-muted: #a1a1aa;
+  --btn-secondary-bg: #3f3f46;
+  --btn-secondary-fg: #fafafa;
+  --btn-secondary-border: #52525b;
+  --btn-ghost-fg: #fafafa;
+  --btn-ghost-hover: rgb(255 255 255 / 0.1);
+}
+
+/* Light canvas — clearer for shop lighting; accents stay orange. */
+html[data-theme="light"] {
+  --background: #f4f4f5;
+  --foreground: #18181b;
+  --pos-surface: #ffffff;
+  --pos-surface-2: #f4f4f5;
+  --pos-border: #d4d4d8;
+  --pos-muted: #52525b;
+  --btn-secondary-bg: #e4e4e7;
+  --btn-secondary-fg: #18181b;
+  --btn-secondary-border: #a1a1aa;
+  --btn-ghost-fg: #18181b;
+  --btn-ghost-hover: rgb(0 0 0 / 0.06);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 8px;
+}
+html[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: #a1a1aa;
+}
+
+/*
+ * Light theme remaps the common dark Tailwind surfaces used across POS.
+ * Scoped to data-theme so dark mode stays untouched. No JS loops / no per-page
+ * rewrite — zero runtime cost beyond one CSS cascade.
+ */
+html[data-theme="light"] .bg-black {
+  background-color: var(--background) !important;
+}
+html[data-theme="light"] .bg-zinc-950 {
+  background-color: var(--pos-surface) !important;
+}
+html[data-theme="light"] .bg-zinc-900 {
+  background-color: var(--pos-surface-2) !important;
+}
+html[data-theme="light"] .bg-black\/40,
+html[data-theme="light"] .bg-black\/30 {
+  background-color: rgb(244 244 245 / 0.9) !important;
+}
+html[data-theme="light"] .border-zinc-800,
+html[data-theme="light"] .border-zinc-700 {
+  border-color: var(--pos-border) !important;
+}
+html[data-theme="light"] .text-white {
+  color: var(--foreground) !important;
+}
+html[data-theme="light"] .text-zinc-200,
+html[data-theme="light"] .text-zinc-300 {
+  color: #3f3f46 !important;
+}
+html[data-theme="light"] .text-zinc-400,
+html[data-theme="light"] .text-zinc-500 {
+  color: var(--pos-muted) !important;
+}
+html[data-theme="light"] .text-zinc-600 {
+  color: #71717a !important;
+}
+/* Keep dialog dimmer dark so focus stays on the modal */
+html[data-theme="light"] .bg-black\/80 {
+  background-color: rgb(0 0 0 / 0.45) !important;
+}
+
+/* Phone suggestions — high contrast in both themes (avoid white-on-white) */
+.phone-suggest-panel {
+  background: #09090b;
+  border-color: #3f3f46;
+}
+.phone-suggest-panel .phone-line {
+  color: #fafafa;
+}
+.phone-suggest-panel .meta-line {
+  color: #a1a1aa;
+}
+.phone-suggest-panel .row-idle:hover {
+  background: #18181b;
+}
+.phone-suggest-panel .row-active {
+  background: rgba(249, 115, 22, 0.28);
+}
+.phone-suggest-panel .row-active .phone-line {
+  color: #fff7ed;
+}
+.phone-suggest-panel .row-active .meta-line {
+  color: #fed7aa;
+}
+
+html[data-theme="light"] .phone-suggest-panel {
+  background: #ffffff;
+  border-color: #d4d4d8;
+}
+html[data-theme="light"] .phone-suggest-panel .phone-line {
+  color: #18181b;
+}
+html[data-theme="light"] .phone-suggest-panel .meta-line {
+  color: #52525b;
+}
+html[data-theme="light"] .phone-suggest-panel .row-idle:hover {
+  background: #f4f4f5;
+}
+html[data-theme="light"] .phone-suggest-panel .row-active {
+  background: #ffedd5;
+}
+html[data-theme="light"] .phone-suggest-panel .row-active .phone-line {
+  color: #9a3412;
+}
+html[data-theme="light"] .phone-suggest-panel .row-active .meta-line {
+  color: #c2410c;
+}
+
