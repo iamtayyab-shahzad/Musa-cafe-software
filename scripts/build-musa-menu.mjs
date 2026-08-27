@@ -26,11 +26,11 @@ const categories = [
   { id: cid(12), name: "Fries", slug: "fries", image: "/products/fries/salted.webp", displayOrder: 12 },
   { id: cid(13), name: "Pasta", slug: "pasta", image: "/products/pasta/creamy.webp", displayOrder: 13 },
   { id: cid(14), name: "Broast", slug: "broast", image: "/products/fried-chicken/chicken-drum.webp", displayOrder: 14 },
-  { id: cid(15), name: "Salad Bar", slug: "salad-bar", image: ph, displayOrder: 15 },
+  { id: cid(15), name: "Salad Bar", slug: "salad-bar", image: "/products/salad-bar/category.webp", displayOrder: 15 },
   { id: cid(16), name: "Shakes", slug: "shakes", image: "/products/shakes/mango-shake.webp", displayOrder: 16 },
-  { id: cid(17), name: "Ice Cream", slug: "ice-cream", image: "/products/shakes/ice-cream-shake.webp", displayOrder: 17 },
+  { id: cid(17), name: "Ice Cream", slug: "ice-cream", image: "/products/ice-cream/rabri-dodh.webp", displayOrder: 17 },
   { id: cid(18), name: "Cold Drinks", slug: "cold-drinks", image: "/products/cold-drinks/category.webp", displayOrder: 18 },
-  { id: cid(19), name: "Musa Specials", slug: "musa-specials", image: ph, displayOrder: 19 },
+  { id: cid(19), name: "Musa Specials", slug: "musa-specials", image: "/products/musa-specials/category.webp", displayOrder: 19 },
 ];
 
 let n = 0;
@@ -297,28 +297,28 @@ add("broast", "Fried Chicken", "Fried chicken (3 pcs).", one(700), "/products/fr
 add("broast", "Full Chargha", "Full chargha.", one(1500), "/products/fried-chicken/chicken-drum.webp", true);
 
 // —— Salad Bar ——
-add("salad-bar", "Dahi Bhalla", "Dahi bhalla.", one(150), ph);
-add("salad-bar", "Musa Special Dahi Bhalla", "Musa special dahi bhalla.", one(200), ph, true);
-add("salad-bar", "Gol Gappay 6 PCS", "Gol gappay (6 pcs).", one(120), ph);
-add("salad-bar", "Gol Gappay 12 PCS", "Gol gappay (12 pcs).", one(240), ph);
-add("salad-bar", "Chana Chat", "Chana chat.", one(200), ph);
-add("salad-bar", "Fruit Chat", "Fruit chat.", one(250), ph);
-add("salad-bar", "Cream Chat", "Cream chat.", one(300), ph);
-add("salad-bar", "Russian Salad", "Russian salad.", one(400), ph, true);
+add("salad-bar", "Dahi Bhalla", "Dahi bhalla.", one(150), "/products/salad-bar/dahi-bhalla.webp");
+add("salad-bar", "Musa Special Dahi Bhalla", "Musa special dahi bhalla.", one(200), "/products/salad-bar/dahi-bhalla.webp", true);
+add("salad-bar", "Gol Gappay 6 PCS", "Gol gappay (6 pcs).", one(120), "/products/salad-bar/gol-gappay.webp");
+add("salad-bar", "Gol Gappay 12 PCS", "Gol gappay (12 pcs).", one(240), "/products/salad-bar/gol-gappay.webp");
+add("salad-bar", "Chana Chat", "Chana chat.", one(200), "/products/salad-bar/chana-chat.webp");
+add("salad-bar", "Fruit Chat", "Fruit chat.", one(250), "/products/salad-bar/fruit-chat.webp");
+add("salad-bar", "Cream Chat", "Cream chat.", one(300), "/products/salad-bar/cream-chat.webp");
+add("salad-bar", "Russian Salad", "Russian salad.", one(400), "/products/salad-bar/russian-salad.webp", true);
 
 // —— Shakes ——
 add("shakes", "Mint Margarita", "Mint margarita.", one(180), "/products/shakes/mint-margretta.webp", true);
 add("shakes", "Apple Shake", "Apple shake.", one(180), "/products/shakes/apple-shake.webp");
 add("shakes", "Banana Shake", "Banana shake.", one(180), "/products/shakes/banana-shake.webp");
 add("shakes", "Mango Shake", "Mango shake.", one(180), "/products/shakes/mango-shake.webp", true);
-add("shakes", "Lemonade", "Fresh lemonade.", one(100), ph);
-add("shakes", "Blue Berry", "Blueberry shake.", one(250), ph);
-add("shakes", "Caramel Shake", "Caramel shake.", one(250), ph);
-add("shakes", "Strawberry Shake", "Strawberry shake.", one(250), ph);
-add("shakes", "Pink Lady", "Pink lady shake.", one(250), ph);
+add("shakes", "Lemonade", "Fresh lemonade.", one(100), "/products/shakes/lemonade.webp");
+add("shakes", "Blue Berry", "Blueberry shake.", one(250), "/products/shakes/blue-berry.webp");
+add("shakes", "Caramel Shake", "Caramel shake.", one(250), "/products/shakes/caramel.webp");
+add("shakes", "Strawberry Shake", "Strawberry shake.", one(250), "/products/shakes/strawberry.webp");
+add("shakes", "Pink Lady", "Pink lady shake.", one(250), "/products/shakes/pink-lady.webp");
 add("shakes", "Vanilla Shake", "Vanilla shake.", one(200), "/products/shakes/ice-cream-shake.webp");
 add("shakes", "Ice Cream Shake", "Ice cream shake.", one(200), "/products/shakes/ice-cream-shake.webp");
-add("shakes", "Oreo Shake", "Oreo shake.", one(200), ph);
+add("shakes", "Oreo Shake", "Oreo shake.", one(200), "/products/shakes/oreo.webp");
 add("shakes", "Khoya Khajoor", "Khoya khajoor shake.", one(280), "/products/shakes/khoya-khajoor.webp", true);
 add("shakes", "Pina Colada", "Pina colada.", one(350), "/products/shakes/pino-colaudo.webp");
 add("shakes", "Power Shake", "Power shake.", one(400), "/products/shakes/apple-banana.webp");
@@ -341,8 +341,8 @@ add(
 );
 add("ice-cream", "Half Litre Ice Cream", "Half litre ice cream.", one(250), "/products/shakes/ice-cream-shake.webp");
 add("ice-cream", "Full Litre Ice Cream", "Full litre ice cream.", one(450), "/products/shakes/ice-cream-shake.webp");
-add("ice-cream", "Rabri Bottle", "Rabri bottle.", one(200), ph);
-add("ice-cream", "Rabri Dodh", "Rabri dodh.", one(200), ph);
+add("ice-cream", "Rabri Bottle", "Rabri bottle.", one(200), "/products/ice-cream/rabri-bottle.webp");
+add("ice-cream", "Rabri Dodh", "Rabri dodh.", one(200), "/products/ice-cream/rabri-dodh.webp");
 
 // —— Cold Drinks ——
 add(
@@ -362,8 +362,8 @@ add("cold-drinks", "Mineral Water Small", "Small mineral water.", one(80), "/pro
 add("cold-drinks", "Mineral Water Large", "Large mineral water.", one(150), "/products/cold-drinks/mineral-water-large.webp");
 
 // —— Musa Specials ——
-add("musa-specials", "Tea", "Hot tea.", one(50), ph, true);
-add("musa-specials", "Samosa", "Samosa.", one(30), ph, true);
+add("musa-specials", "Tea", "Hot tea.", one(50), "/products/musa-specials/tea.webp", true);
+add("musa-specials", "Samosa", "Samosa.", one(30), "/products/musa-specials/samosa.webp", true);
 
 const menu = {
   restaurant: {
@@ -383,7 +383,7 @@ const menu = {
   notes: [
     "Menu taken from Musa Cafe Pizza Hut printed flyers (Waan Wala Pul, Musa Khel).",
     "Mighty Burger matches printed 'Mayte Burger'. Crispy Nachos listed under Sandwiches as on the flyer.",
-    "Products using placeholder.svg need a real photo from the shop.",
+    "Crispy Nachos still needs a product photo (placeholder).",
   ],
   locations: [
     {

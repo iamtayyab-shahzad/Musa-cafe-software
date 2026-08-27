@@ -16,8 +16,8 @@ App runs on **http://localhost:3002**
 
 | User | Password | Result |
 |------|----------|--------|
-| `admin` | `admin@admin` | Admin dashboard |
-| `staff` | `staff@54321` | Redirects to POS (`NEXT_PUBLIC_POS_URL`, default `http://localhost:3001`) |
+| `admin` | `musacafe321` | Admin dashboard |
+| `staff` | `musacafe123` | Redirects to POS (`NEXT_PUBLIC_POS_URL`, default `http://localhost:3001`) |
 
 POS staff login is unchanged — this admin login only routes staff to the existing POS app.
 

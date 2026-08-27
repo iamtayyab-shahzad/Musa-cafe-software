@@ -106,8 +106,8 @@ Or use Render **Shell** if available on your plan.
 
 Default seed logins (change immediately):
 
-- `admin` / `admin@admin`
-- `staff` / `staff@54321`
+- `admin` / `musacafe321`
+- `staff` / `musacafe123`
 
 ---
 

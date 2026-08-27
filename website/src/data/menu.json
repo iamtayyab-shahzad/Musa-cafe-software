@@ -16,7 +16,7 @@
   "notes": [
     "Menu taken from Musa Cafe Pizza Hut printed flyers (Waan Wala Pul, Musa Khel).",
     "Mighty Burger matches printed 'Mayte Burger'. Crispy Nachos listed under Sandwiches as on the flyer.",
-    "Products using placeholder.svg need a real photo from the shop."
+    "Crispy Nachos still needs a product photo (placeholder)."
   ],
   "locations": [
     {
@@ -133,7 +133,7 @@
       "id": "10000000-0000-4000-8000-000000000015",
       "name": "Salad Bar",
       "slug": "salad-bar",
-      "image": "/products/placeholder.svg",
+      "image": "/products/salad-bar/category.webp",
       "displayOrder": 15
     },
     {
@@ -147,7 +147,7 @@
       "id": "10000000-0000-4000-8000-000000000017",
       "name": "Ice Cream",
       "slug": "ice-cream",
-      "image": "/products/shakes/ice-cream-shake.webp",
+      "image": "/products/ice-cream/rabri-dodh.webp",
       "displayOrder": 17
     },
     {
@@ -161,7 +161,7 @@
       "id": "10000000-0000-4000-8000-000000000019",
       "name": "Musa Specials",
       "slug": "musa-specials",
-      "image": "/products/placeholder.svg",
+      "image": "/products/musa-specials/category.webp",
       "displayOrder": 19
     }
   ],
@@ -1729,7 +1729,7 @@
       "category": "salad-bar",
       "name": "Dahi Bhalla",
       "description": "Dahi bhalla.",
-      "image": "/products/placeholder.svg",
+      "image": "/products/salad-bar/dahi-bhalla.webp",
       "featured": false,
       "sizes": [
         {
@@ -1743,7 +1743,7 @@
       "category": "salad-bar",
       "name": "Musa Special Dahi Bhalla",
       "description": "Musa special dahi bhalla.",
-      "image": "/products/placeholder.svg",
+      "image": "/products/salad-bar/dahi-bhalla.webp",
       "featured": true,
       "sizes": [
         {
@@ -1757,7 +1757,7 @@
       "category": "salad-bar",
       "name": "Gol Gappay 6 PCS",
       "description": "Gol gappay (6 pcs).",
-      "image": "/products/placeholder.svg",
+      "image": "/products/salad-bar/gol-gappay.webp",
       "featured": false,
       "sizes": [
         {
@@ -1771,7 +1771,7 @@
       "category": "salad-bar",
       "name": "Gol Gappay 12 PCS",
       "description": "Gol gappay (12 pcs).",
-      "image": "/products/placeholder.svg",
+      "image": "/products/salad-bar/gol-gappay.webp",
       "featured": false,
       "sizes": [
         {
@@ -1785,7 +1785,7 @@
       "category": "salad-bar",
       "name": "Chana Chat",
       "description": "Chana chat.",
-      "image": "/products/placeholder.svg",
+      "image": "/products/salad-bar/chana-chat.webp",
       "featured": false,
       "sizes": [
         {
@@ -1799,7 +1799,7 @@
       "category": "salad-bar",
       "name": "Fruit Chat",
       "description": "Fruit chat.",
-      "image": "/products/placeholder.svg",
+      "image": "/products/salad-bar/fruit-chat.webp",
       "featured": false,
       "sizes": [
         {
@@ -1813,7 +1813,7 @@
       "category": "salad-bar",
       "name": "Cream Chat",
       "description": "Cream chat.",
-      "image": "/products/placeholder.svg",
+      "image": "/products/salad-bar/cream-chat.webp",
       "featured": false,
       "sizes": [
         {
@@ -1827,7 +1827,7 @@
       "category": "salad-bar",
       "name": "Russian Salad",
       "description": "Russian salad.",
-      "image": "/products/placeholder.svg",
+      "image": "/products/salad-bar/russian-salad.webp",
       "featured": true,
       "sizes": [
         {
@@ -1897,7 +1897,7 @@
       "category": "shakes",
       "name": "Lemonade",
       "description": "Fresh lemonade.",
-      "image": "/products/placeholder.svg",
+      "image": "/products/shakes/lemonade.webp",
       "featured": false,
       "sizes": [
         {
@@ -1911,7 +1911,7 @@
       "category": "shakes",
       "name": "Blue Berry",
       "description": "Blueberry shake.",
-      "image": "/products/placeholder.svg",
+      "image": "/products/shakes/blue-berry.webp",
       "featured": false,
       "sizes": [
         {
@@ -1925,7 +1925,7 @@
       "category": "shakes",
       "name": "Caramel Shake",
       "description": "Caramel shake.",
-      "image": "/products/placeholder.svg",
+      "image": "/products/shakes/caramel.webp",
       "featured": false,
       "sizes": [
         {
@@ -1939,7 +1939,7 @@
       "category": "shakes",
       "name": "Strawberry Shake",
       "description": "Strawberry shake.",
-      "image": "/products/placeholder.svg",
+      "image": "/products/shakes/strawberry.webp",
       "featured": false,
       "sizes": [
         {
@@ -1953,7 +1953,7 @@
       "category": "shakes",
       "name": "Pink Lady",
       "description": "Pink lady shake.",
-      "image": "/products/placeholder.svg",
+      "image": "/products/shakes/pink-lady.webp",
       "featured": false,
       "sizes": [
         {
@@ -1995,7 +1995,7 @@
       "category": "shakes",
       "name": "Oreo Shake",
       "description": "Oreo shake.",
-      "image": "/products/placeholder.svg",
+      "image": "/products/shakes/oreo.webp",
       "featured": false,
       "sizes": [
         {
@@ -2123,7 +2123,7 @@
       "category": "ice-cream",
       "name": "Rabri Bottle",
       "description": "Rabri bottle.",
-      "image": "/products/placeholder.svg",
+      "image": "/products/ice-cream/rabri-bottle.webp",
       "featured": false,
       "sizes": [
         {
@@ -2137,7 +2137,7 @@
       "category": "ice-cream",
       "name": "Rabri Dodh",
       "description": "Rabri dodh.",
-      "image": "/products/placeholder.svg",
+      "image": "/products/ice-cream/rabri-dodh.webp",
       "featured": false,
       "sizes": [
         {
@@ -2205,7 +2205,7 @@
       "category": "musa-specials",
       "name": "Tea",
       "description": "Hot tea.",
-      "image": "/products/placeholder.svg",
+      "image": "/products/musa-specials/tea.webp",
       "featured": true,
       "sizes": [
         {
@@ -2219,7 +2219,7 @@
       "category": "musa-specials",
       "name": "Samosa",
       "description": "Samosa.",
-      "image": "/products/placeholder.svg",
+      "image": "/products/musa-specials/samosa.webp",
       "featured": true,
       "sizes": [
         {

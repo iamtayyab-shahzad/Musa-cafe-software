@@ -20,8 +20,8 @@ go run ./cmd/seed
 ```
 
 Default credentials:
-- Admin: `admin` / `admin@admin`
-- Staff (POS): `staff` / `staff@54321`
+- Admin: `admin` / `musacafe321`
+- Staff (POS): `staff` / `musacafe123`
 
 ## Import the Krunchies menu
 

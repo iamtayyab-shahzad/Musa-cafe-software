@@ -91,7 +91,7 @@ type result struct {
 }
 
 func main() {
-	token, err := login("admin", "admin@admin")
+	token, err := login("admin", "musacafe321")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "login failed: %v\n", err)
 		os.Exit(1)
