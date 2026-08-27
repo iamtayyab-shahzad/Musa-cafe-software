@@ -131,7 +131,7 @@ func BreakdownAllocatedExpenses(rows []domain.Expense, start, end time.Time) []E
 		}
 		cat := e.Category
 		if cat == "" {
-			cat = "Miscellaneous"
+			cat = "Other"
 		}
 		if _, ok := byCat[cat]; !ok {
 			order = append(order, cat)

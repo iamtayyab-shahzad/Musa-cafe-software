@@ -1031,7 +1031,16 @@ export async function runSync(reason: string = "manual"): Promise<void> {
         reason === "visible" ||
         (reason === "interval" && (syncedSomething || due.length === 0));
 
-      if (shouldRefreshCatalog && (!hadFailure || reason === "manual")) {
+      // Do not gate catalog/offers on hadFailure: one bad action in a large
+      // backlog must not block discount-rules refresh when others succeeded
+      // or the queue is already idle.
+      const allowCatalogPull =
+        reason === "manual" ||
+        syncedSomething ||
+        due.length === 0 ||
+        stillPending.length === 0;
+
+      if (shouldRefreshCatalog && allowCatalogPull) {
         try {
           const wantIncremental = shouldUseIncrementalCatalogPull(reason);
           const lastPull = wantIncremental

@@ -22,15 +22,9 @@ var DefaultExpenseCategories = []string{
 	"Internet",
 	"Salaries",
 	"Inventory / Stock",
-	"Cleaning",
-	"Packaging",
 	"Advertising",
-	"Repairs & Maintenance",
 	"Fuel",
 	"Delivery Charges",
-	"Equipment",
-	"Licenses & Taxes",
-	"Miscellaneous",
 }
 
 // Expense is any operating cost for the period, including salaries, rent, and

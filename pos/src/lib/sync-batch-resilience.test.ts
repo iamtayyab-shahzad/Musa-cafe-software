@@ -156,4 +156,89 @@ describe("runSync batch resilience", () => {
     expect(getSyncState().online).toBe(true);
     expect(navigator.onLine).toBe(true);
   });
+
+  it("still pulls discount-rules after a mixed backlog (one fail, several ok)", async () => {
+    const ids = Array.from({ length: 4 }, (_, i) => `mix-${i}`);
+    for (const id of ids) {
+      await upsertLocalOrder(order(id));
+      await enqueueAction({
+        type: "CREATE_ORDER",
+        payload: {
+          localId: id,
+          orderType: "walkin",
+          input: {
+            client_order_id: id,
+            customer_name: "Walk-in Customer",
+            phone: "0000000000",
+            address: "In Store",
+            location_id: "50000000-0000-4000-8000-000000000000",
+            payment_method: "cash",
+            items: [
+              {
+                product_id: "11111111-1111-4111-8111-111111111111",
+                product_size_id: "22222222-2222-4222-8222-222222222222",
+                quantity: 1,
+                price: 1000,
+              },
+            ],
+          },
+        },
+      });
+    }
+
+    let createCalls = 0;
+    let discountRulesCalls = 0;
+    apiFetchMock.mockImplementation(async (path: string) => {
+      if (typeof path === "string" && path.includes("discount-rules")) {
+        discountRulesCalls += 1;
+        return [
+          {
+            id: "rule-1",
+            name: "Weekend",
+            active: true,
+            percent: 10,
+            min_subtotal: 0,
+            schedule_type: "always",
+            exclude_deals: true,
+          },
+        ];
+      }
+      if (typeof path === "string" && path.startsWith("/orders?")) return [];
+      if (typeof path === "string" && path.startsWith("/inventory")) return [];
+
+      createCalls += 1;
+      if (createCalls === 2) {
+        const err = new Error("Request timed out");
+        (err as { status?: number }).status = 0;
+        throw err;
+      }
+      return {
+        id: `server-mix-${createCalls}`,
+        order_number: `MC-${createCalls}`,
+        order_status: "PENDING",
+        customer_name: "Walk-in Customer",
+        phone: "0000000000",
+        address: "In Store",
+        location_id: "50000000-0000-4000-8000-000000000000",
+        delivery_charge: 0,
+        cash_on_delivery_fee: 0,
+        payment_method: "cash",
+        order_type: "walkin",
+        order_notes: "",
+        subtotal: 1000,
+        discount: 0,
+        grand_total: 1000,
+        items: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+    });
+
+    // Use startup (not manual) so we assert hadFailure no longer blocks the pull.
+    await runSync("startup");
+
+    const pending = await listPendingActions();
+    expect(pending).toHaveLength(1);
+    expect(discountRulesCalls).toBeGreaterThanOrEqual(1);
+  });
 });
