@@ -14,7 +14,16 @@ import {
   makeLineKey,
   WALKIN_LOCATION_ID,
 } from "@/lib/utils";
-import { printCustomerReceipt, printKitchenReceipt, decodeKitchenInstructions, parseTableNumber, ensureReceiptItemNames } from "@/lib/receipt";
+import {
+  printCustomerReceipt,
+  printKitchenReceipt,
+  decodeKitchenInstructions,
+  parseTableNumber,
+  parseServiceMode,
+  stripTableFromNotes,
+  kitchenOrderTypeLabel,
+  ensureReceiptItemNames,
+} from "@/lib/receipt";
 import { ordersApi, productsApi, settingsApi } from "@/services/api";
 import { isOnline } from "@/lib/network";
 import { getSyncState } from "@/lib/sync-engine";
@@ -217,8 +226,9 @@ export default function PendingOrdersPage() {
       locationId: order.location_id || WALKIN_LOCATION_ID,
       deliveryCharge: order.delivery_charge || 0,
       paymentMethod: order.payment_method as PaymentMethod,
-      orderNotes: order.order_notes?.replace(/(?:^|\|\s*)TABLE:[^\s|]+/gi, "").trim() || "",
+      orderNotes: "",
       tableNumber: parseTableNumber(order.order_notes),
+      serviceMode: parseServiceMode(order.order_notes),
       items,
     });
     toast.message(`Editing ${order.order_number}`);
@@ -342,9 +352,17 @@ export default function PendingOrdersPage() {
                     {" · "}
                     {items.length} item{items.length === 1 ? "" : "s"}
                   </p>
-                  {order.order_notes ? (
+                  {order.order_type === "walkin" ? (
+                    <p className="text-sm font-semibold text-orange-300">
+                      {kitchenOrderTypeLabel(order.order_type, order.order_notes)}
+                      {parseTableNumber(order.order_notes)
+                        ? ` · Table ${parseTableNumber(order.order_notes)}`
+                        : ""}
+                    </p>
+                  ) : null}
+                  {stripTableFromNotes(order.order_notes) ? (
                     <p className="text-sm text-amber-300/90">
-                      Note: {order.order_notes}
+                      Note: {stripTableFromNotes(order.order_notes)}
                     </p>
                   ) : null}
                   <ul className="mt-1 space-y-1 rounded-lg border border-zinc-800 bg-black/30 p-3 text-sm text-zinc-300">

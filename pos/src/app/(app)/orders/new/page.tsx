@@ -9,7 +9,6 @@ import { Minus, Plus, Trash2, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -41,7 +40,12 @@ import {
   paymentsForOrderType,
   WALKIN_LOCATION_ID,
 } from "@/lib/utils";
-import { printCustomerReceipt, printKitchenReceipt, encodeKitchenInstructions } from "@/lib/receipt";
+import {
+  printCustomerReceipt,
+  printKitchenReceipt,
+  encodeKitchenInstructions,
+  encodeWalkinOrderNotes,
+} from "@/lib/receipt";
 import { activePromoInfo, weekendPromoLabel } from "@/lib/discount-rules";
 import { deleteDraft } from "@/lib/offline-db";
 import { ordersShareIdentity } from "@/lib/order-identity";
@@ -223,17 +227,19 @@ export default function NewOrderPage() {
   };
 
   const buildPayload = () => {
-    const notes = [bill.orderNotes.trim()];
-    if (isWalkin && bill.tableNumber.trim()) {
-      notes.push(`TABLE:${bill.tableNumber.trim()}`);
-    }
+    const order_notes = isWalkin
+      ? encodeWalkinOrderNotes({
+          tableNumber: bill.tableNumber,
+          serviceMode: bill.serviceMode,
+        })
+      : "";
     return {
       customer_name: isWalkin ? "Walk-in Customer" : bill.customerName.trim(),
       phone: isWalkin ? "0000000000" : normalizePkPhone(bill.phone),
       address: isWalkin ? "In Store" : bill.address.trim(),
       location_id: isWalkin ? WALKIN_LOCATION_ID : bill.locationId,
-      payment_method: bill.paymentMethod,
-      order_notes: notes.filter(Boolean).join(" | "),
+      payment_method: isWalkin ? "cash" : bill.paymentMethod,
+      order_notes,
       items: bill.items.map((i) => ({
         product_id: i.product_id,
         product_size_id: i.size_id,
@@ -366,7 +372,10 @@ export default function NewOrderPage() {
       toast.error("Cart is empty");
       return false;
     }
-    if (!paymentOptions.some((p) => p.id === bill.paymentMethod)) {
+    if (
+      !isWalkin &&
+      !paymentOptions.some((p) => p.id === bill.paymentMethod)
+    ) {
       toast.error("Select a valid payment method");
       return false;
     }
@@ -753,13 +762,45 @@ export default function NewOrderPage() {
           )}
 
           {isWalkin ? (
-            <div className="space-y-1">
-              <Label>Table Number (optional)</Label>
-              <Input
-                value={bill.tableNumber}
-                placeholder="e.g. 5"
-                onChange={(e) => bill.setTableNumber(e.target.value)}
-              />
+            <div className="space-y-3">
+              <div>
+                <Label className="mb-2 block">Order type</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {(
+                    [
+                      { id: "dine_in" as const, label: "Dine In" },
+                      { id: "parcel" as const, label: "Parcel" },
+                    ] as const
+                  ).map((opt) => (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => {
+                        bill.setServiceMode(opt.id);
+                        if (opt.id === "parcel") bill.setTableNumber("");
+                      }}
+                      className={cn(
+                        "rounded-lg px-2 py-3 text-sm font-bold",
+                        bill.serviceMode === opt.id
+                          ? "bg-orange-500 text-black"
+                          : "bg-zinc-900 text-zinc-400",
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {bill.serviceMode === "dine_in" ? (
+                <div className="space-y-1">
+                  <Label>Table Number</Label>
+                  <Input
+                    value={bill.tableNumber}
+                    placeholder="e.g. 5"
+                    onChange={(e) => bill.setTableNumber(e.target.value)}
+                  />
+                </div>
+              ) : null}
             </div>
           ) : null}
 
@@ -870,34 +911,28 @@ export default function NewOrderPage() {
             )}
           </div>
 
-          <div className="space-y-1">
-            <Label>Order Notes</Label>
-            <Textarea
-              value={bill.orderNotes}
-              onChange={(e) => bill.setOrderNotes(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <Label className="mb-2 block">Payment</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {paymentOptions.map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => bill.setPaymentMethod(m.id)}
-                  className={cn(
-                    "rounded-lg px-2 py-3 text-sm font-bold",
-                    bill.paymentMethod === m.id
-                      ? "bg-orange-500 text-black"
-                      : "bg-zinc-900 text-zinc-400",
-                  )}
-                >
-                  {m.label}
-                </button>
-              ))}
+          {!isWalkin ? (
+            <div>
+              <Label className="mb-2 block">Payment</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {paymentOptions.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => bill.setPaymentMethod(m.id)}
+                    className={cn(
+                      "rounded-lg px-2 py-3 text-sm font-bold",
+                      bill.paymentMethod === m.id
+                        ? "bg-orange-500 text-black"
+                        : "bg-zinc-900 text-zinc-400",
+                    )}
+                  >
+                    {m.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : null}
 
           <div className="space-y-1 rounded-lg border border-zinc-800 p-3 text-sm">
             {(() => {

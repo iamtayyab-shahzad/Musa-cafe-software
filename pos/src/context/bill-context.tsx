@@ -26,6 +26,12 @@ import {
 import { isDealProduct } from "@/lib/deal-flavors";
 import { weekendDiscount } from "@/lib/discount-rules";
 import { deleteDraft, getDraft, saveDraft } from "@/lib/offline-db";
+import {
+  encodeWalkinOrderNotes,
+  parseServiceMode,
+  parseTableNumber,
+  type WalkinServiceMode,
+} from "@/lib/receipt";
 
 const ACTIVE_DRAFT_ID = "active-cart";
 
@@ -41,6 +47,7 @@ interface BillState {
   paymentMethod: PaymentMethod;
   orderNotes: string;
   tableNumber: string;
+  serviceMode: WalkinServiceMode;
   items: BillLine[];
 }
 
@@ -53,6 +60,7 @@ interface BillContextValue extends BillState {
   setPaymentMethod: (v: PaymentMethod) => void;
   setOrderNotes: (v: string) => void;
   setTableNumber: (v: string) => void;
+  setServiceMode: (v: WalkinServiceMode) => void;
   addProduct: (
     product: Product,
     size: ProductSize,
@@ -87,6 +95,7 @@ const defaults: BillState = {
   paymentMethod: "cash",
   orderNotes: "",
   tableNumber: "",
+  serviceMode: "dine_in",
   items: [],
 };
 
@@ -135,9 +144,14 @@ function toPendingDraft(state: BillState): PendingDraft {
     location_id: state.locationId,
     delivery_charge: state.deliveryCharge,
     payment_method: state.paymentMethod,
-    order_notes: state.tableNumber
-      ? [state.orderNotes, `TABLE:${state.tableNumber}`].filter(Boolean).join(" | ")
-      : state.orderNotes,
+    order_notes:
+      state.orderType === "walkin"
+        ? encodeWalkinOrderNotes({
+            tableNumber: state.tableNumber,
+            serviceMode: state.serviceMode,
+            extraNotes: state.orderNotes,
+          })
+        : state.orderNotes,
     items: state.items,
   };
 }
@@ -163,12 +177,6 @@ export function BillProvider({ children }: { children: ReactNode }) {
         const draft = await getDraft(ACTIVE_DRAFT_ID);
         if (cancelled) return;
         if (draft && draft.items?.length) {
-          const tableMatch = draft.order_notes?.match(/TABLE:([^\s|]+)/i);
-          const notes = (draft.order_notes || "")
-            .replace(/(?:^|\|\s*)TABLE:[^\s|]+/gi, "")
-            .replace(/\s*\|\s*/g, " | ")
-            .replace(/^\s*\|\s*|\s*\|\s*$/g, "")
-            .trim();
           setState({
             draftId: draft.id,
             editingOrderId: null,
@@ -179,8 +187,9 @@ export function BillProvider({ children }: { children: ReactNode }) {
             locationId: draft.location_id,
             deliveryCharge: draft.delivery_charge,
             paymentMethod: draft.payment_method,
-            orderNotes: notes,
-            tableNumber: tableMatch?.[1] || "",
+            orderNotes: "",
+            tableNumber: parseTableNumber(draft.order_notes),
+            serviceMode: parseServiceMode(draft.order_notes),
             items: draft.items,
           });
           setCartRecovered(true);
@@ -230,6 +239,7 @@ export function BillProvider({ children }: { children: ReactNode }) {
     state.paymentMethod,
     state.orderNotes,
     state.tableNumber,
+    state.serviceMode,
     state.items,
   ]);
 
@@ -332,6 +342,7 @@ export function BillProvider({ children }: { children: ReactNode }) {
         setState((p) => ({ ...p, paymentMethod })),
       setOrderNotes: (orderNotes) => setState((p) => ({ ...p, orderNotes })),
       setTableNumber: (tableNumber) => setState((p) => ({ ...p, tableNumber })),
+      setServiceMode: (serviceMode) => setState((p) => ({ ...p, serviceMode })),
       addProduct,
       changeSize: (key, size) =>
         setState((p) => {
@@ -468,6 +479,7 @@ export function BillProvider({ children }: { children: ReactNode }) {
           ...customerFieldsForOrderType(p.orderType),
           orderNotes: "",
           tableNumber: "",
+          serviceMode: "dine_in",
           items: [],
           editingOrderId: null,
         }));

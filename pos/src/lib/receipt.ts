@@ -208,8 +208,13 @@ function runOnePrintJob(html: string, title: string): Promise<boolean> {
   });
 }
 
-export function kitchenOrderTypeLabel(orderType: string): string {
-  if (orderType === "walkin") return "Dine In";
+export function kitchenOrderTypeLabel(
+  orderType: string,
+  orderNotes?: string | null,
+): string {
+  if (orderType === "walkin") {
+    return parseServiceMode(orderNotes) === "parcel" ? "Parcel" : "Dine In";
+  }
   if (orderType === "phone") return "Delivery";
   if (orderType === "website" || orderType === "guest") return "Delivery";
   return orderType || "Order";
@@ -222,13 +227,40 @@ export function parseTableNumber(orderNotes?: string | null): string {
   return match?.[1]?.trim() || "";
 }
 
+export type WalkinServiceMode = "dine_in" | "parcel";
+
+/** Parse SERVICE:DINE_IN / SERVICE:PARCEL from order notes. */
+export function parseServiceMode(
+  orderNotes?: string | null,
+): WalkinServiceMode {
+  if (!orderNotes) return "dine_in";
+  if (/(?:^|\|\s*)SERVICE:PARCEL(?:\s*\||$)/i.test(orderNotes)) return "parcel";
+  return "dine_in";
+}
+
 export function stripTableFromNotes(orderNotes?: string | null): string {
   if (!orderNotes) return "";
   return orderNotes
     .replace(/(?:^|\|\s*)TABLE:[^\s|]+/gi, "")
+    .replace(/(?:^|\|\s*)SERVICE:(?:DINE_IN|PARCEL)/gi, "")
     .replace(/\s*\|\s*/g, " | ")
     .replace(/^\s*\|\s*|\s*\|\s*$/g, "")
     .trim();
+}
+
+/** Build walk-in metadata into order_notes (table + dine-in/parcel). */
+export function encodeWalkinOrderNotes(opts: {
+  tableNumber?: string;
+  serviceMode?: WalkinServiceMode;
+  extraNotes?: string;
+}): string {
+  const parts: string[] = [];
+  const extra = opts.extraNotes?.trim();
+  if (extra) parts.push(extra);
+  if (opts.serviceMode === "parcel") parts.push("SERVICE:PARCEL");
+  else if (opts.serviceMode === "dine_in") parts.push("SERVICE:DINE_IN");
+  if (opts.tableNumber?.trim()) parts.push(`TABLE:${opts.tableNumber.trim()}`);
+  return parts.join(" | ");
 }
 
 export type KitchenLineMeta = {
@@ -529,10 +561,35 @@ export function buildKitchenReceiptHtml(order: Order) {
     min-height: 18mm;
     font-size: 11px;
   }
+  .table-big {
+    text-align: center;
+    font-size: 32px;
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: 1px;
+    border: 2px solid #000;
+    padding: 8px 4px;
+    margin: 0 0 8px;
+    text-transform: uppercase;
+  }
+  .service-big {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin: 0 0 6px;
+    text-transform: uppercase;
+  }
 </style>
 </head>
 <body>
-  <div class="shop">KRUNCHIES PIZZA</div>
+  <div class="shop">${escapeHtml(shop.name)}</div>
+  ${
+    parseTableNumber(order.order_notes)
+      ? `<div class="table-big">TABLE ${escapeHtml(parseTableNumber(order.order_notes))}</div>`
+      : ""
+  }
+  <div class="service-big">${escapeHtml(kitchenOrderTypeLabel(order.order_type, order.order_notes))}</div>
   <div class="banner">* Kitchen Order Ticket *</div>
   <div class="meta">
     <div>Ticket No. : ${escapeHtml(order.order_number || order.id)}</div>
@@ -783,10 +840,38 @@ export function buildCustomerReceiptHtml(
     min-height: 18mm;
     font-size: 11px;
   }
+  .table-big {
+    text-align: center;
+    font-size: 32px;
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: 1px;
+    border: 2px solid #000;
+    padding: 8px 4px;
+    margin: 0 0 6px;
+    text-transform: uppercase;
+  }
+  .service-line {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0 0 4px;
+    text-transform: uppercase;
+  }
 </style>
 </head>
 <body>
   <h1>${escapeHtml(settings?.restaurant_name || shop.name)}</h1>
+  ${
+    parseTableNumber(order.order_notes)
+      ? `<div class="table-big">TABLE ${escapeHtml(parseTableNumber(order.order_notes))}</div>`
+      : ""
+  }
+  ${
+    order.order_type === "walkin"
+      ? `<div class="service-line">${escapeHtml(kitchenOrderTypeLabel(order.order_type, order.order_notes))}</div>`
+      : ""
+  }
   <div class="meta">
     ${escapeHtml(settings?.phone || "")}<br/>
     ${reprint ? "<strong>REPRINT</strong><br/>" : ""}

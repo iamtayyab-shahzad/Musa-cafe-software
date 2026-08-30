@@ -142,6 +142,56 @@ describe("receipt product names", () => {
 });
 
 describe("kitchen ticket layout", () => {
+  it("prints a large table number when TABLE is set", () => {
+    const order = ensureReceiptItemNames(
+      {
+        ...baseOrder([
+          {
+            id: "i1",
+            created_at: "",
+            updated_at: "",
+            order_id: "ord-1",
+            product_id: "p1",
+            product_size_id: "s1",
+            quantity: 1,
+            price: 100,
+            product_name: "Zinger Burger",
+          },
+        ]),
+        order_notes: "SERVICE:DINE_IN | TABLE:7",
+      },
+    );
+    const kitchen = buildKitchenReceiptHtml(order);
+    const customer = buildCustomerReceiptHtml(order, null);
+    expect(kitchen).toContain("TABLE 7");
+    expect(kitchen).toContain("Dine In");
+    expect(customer).toContain("TABLE 7");
+  });
+
+  it("prints Parcel for walk-in parcel service mode", () => {
+    const order = ensureReceiptItemNames(
+      {
+        ...baseOrder([
+          {
+            id: "i1",
+            created_at: "",
+            updated_at: "",
+            order_id: "ord-1",
+            product_id: "p1",
+            product_size_id: "s1",
+            quantity: 1,
+            price: 100,
+            product_name: "Zinger Burger",
+          },
+        ]),
+        order_notes: "SERVICE:PARCEL",
+      },
+    );
+    const kitchen = buildKitchenReceiptHtml(order);
+    expect(kitchen).toContain("Parcel");
+    expect(kitchen).not.toContain("TABLE ");
+  });
+
   it("puts quantity on the right and uses normal weight", () => {
     const order = ensureReceiptItemNames(
       baseOrder([
