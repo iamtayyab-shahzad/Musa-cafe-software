@@ -77,6 +77,14 @@ const ManualPriceDialog = dynamic(
   { ssr: false },
 );
 
+const CancelOrderPasswordDialog = dynamic(
+  () =>
+    import("@/components/cancel-order-password-dialog").then(
+      (m) => m.CancelOrderPasswordDialog,
+    ),
+  { ssr: false },
+);
+
 export default function NewOrderPage() {
   const qc = useQueryClient();
   const bill = useBill();
@@ -85,6 +93,7 @@ export default function NewOrderPage() {
   const [busy, setBusy] = useState(false);
   const [dealProduct, setDealProduct] = useState<Product | null>(null);
   const [drinkProduct, setDrinkProduct] = useState<Product | null>(null);
+  const [cancelPasswordOpen, setCancelPasswordOpen] = useState(false);
   const [manualPriceProduct, setManualPriceProduct] = useState<Product | null>(
     null,
   );
@@ -994,7 +1003,11 @@ export default function NewOrderPage() {
           <Button variant="outline" onClick={reprint}>
             <Printer className="h-4 w-4" /> Reprint
           </Button>
-          <Button variant="danger" onClick={cancelBill} disabled={busy}>
+          <Button
+            variant="danger"
+            onClick={() => setCancelPasswordOpen(true)}
+            disabled={busy}
+          >
             Cancel
           </Button>
           <Button
@@ -1033,6 +1046,11 @@ export default function NewOrderPage() {
           if (!open) setManualPriceProduct(null);
         }}
         onConfirm={onManualPriceConfirm}
+      />
+      <CancelOrderPasswordDialog
+        open={cancelPasswordOpen}
+        onOpenChange={setCancelPasswordOpen}
+        onConfirm={cancelBill}
       />
     </div>
   );

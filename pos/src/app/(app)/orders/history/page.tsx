@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CancelOrderPasswordDialog } from "@/components/cancel-order-password-dialog";
 import { printCustomerReceipt, ensureReceiptItemNames } from "@/lib/receipt";
 import { cn, formatOrderItemsSummary, formatPrice, LAST_RECEIPT_KEY } from "@/lib/utils";
 import { ordersApi, productsApi, settingsApi } from "@/services/api";
@@ -14,6 +15,7 @@ export default function OrderHistoryPage() {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("all");
+  const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["orders"],
@@ -177,7 +179,7 @@ export default function OrderHistoryPage() {
                   {order.order_status === "PENDING" && (
                     <>
                       <Button onClick={() => complete(order)}>Complete</Button>
-                      <Button variant="danger" onClick={() => cancel(order)}>
+                      <Button variant="danger" onClick={() => setCancelTarget(order)}>
                         Cancel
                       </Button>
                     </>
@@ -194,6 +196,16 @@ export default function OrderHistoryPage() {
           )}
         </div>
       )}
+      <CancelOrderPasswordDialog
+        open={Boolean(cancelTarget)}
+        onOpenChange={(open) => {
+          if (!open) setCancelTarget(null);
+        }}
+        onConfirm={() => {
+          if (cancelTarget) void cancel(cancelTarget);
+          setCancelTarget(null);
+        }}
+      />
     </div>
   );
 }

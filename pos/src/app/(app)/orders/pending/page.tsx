@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CancelOrderPasswordDialog } from "@/components/cancel-order-password-dialog";
 import { useBill } from "@/context/bill-context";
 import {
   cn,
@@ -66,6 +67,7 @@ export default function PendingOrdersPage() {
   const bill = useBill();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<FilterType>("all");
+  const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
 
   const { data: settings } = useQuery({
     queryKey: ["settings"],
@@ -404,7 +406,7 @@ export default function PendingOrdersPage() {
                     Kitchen
                   </Button>
                   <Button onClick={() => complete(order)}>Complete</Button>
-                  <Button variant="danger" onClick={() => cancel(order)}>
+                  <Button variant="danger" onClick={() => setCancelTarget(order)}>
                     Cancel
                   </Button>
                 </div>
@@ -422,6 +424,16 @@ export default function PendingOrdersPage() {
           </p>
         ) : null}
       </div>
+      <CancelOrderPasswordDialog
+        open={Boolean(cancelTarget)}
+        onOpenChange={(open) => {
+          if (!open) setCancelTarget(null);
+        }}
+        onConfirm={() => {
+          if (cancelTarget) cancel(cancelTarget);
+          setCancelTarget(null);
+        }}
+      />
     </div>
   );
 }
