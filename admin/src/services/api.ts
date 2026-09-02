@@ -73,6 +73,7 @@ type BackendSetting = {
   drink_flavors?: string;
   /** First-visit website appearance: dark | dim | light | warm */
   default_site_theme?: string;
+  pos_one_click_complete?: boolean;
 };
 
 type BackendInventory = {
@@ -512,6 +513,7 @@ export type SettingsUpdatePayload = {
   drink_flavors?: string;
   /** First-visit website appearance: dark | dim | light | warm */
   default_site_theme?: string;
+  pos_one_click_complete?: boolean;
 };
 
 export const settingsApi = {

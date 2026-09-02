@@ -55,3 +55,48 @@ export function countGridColumns(el: HTMLElement | null): number {
   const parts = style.gridTemplateColumns.split(" ").filter(Boolean);
   return Math.max(1, parts.length || 2);
 }
+
+/**
+ * After arrow-key navigation, scrolling moves tiles under a stationary mouse
+ * and fires mouseenter — which would steal the highlight. Only allow hover
+ * selection after the pointer actually moves.
+ */
+export function createHoverSelectGate() {
+  let mode: "keyboard" | "mouse" = "mouse";
+  let lastX = Number.NaN;
+  let lastY = Number.NaN;
+
+  return {
+    markKeyboard() {
+      mode = "keyboard";
+    },
+    onPointerMove(clientX: number, clientY: number) {
+      if (
+        Number.isFinite(lastX) &&
+        (Math.abs(clientX - lastX) > 2 || Math.abs(clientY - lastY) > 2)
+      ) {
+        mode = "mouse";
+      }
+      lastX = clientX;
+      lastY = clientY;
+    },
+    allowHover() {
+      return mode === "mouse";
+    },
+  };
+}
+
+/** Scroll `el` inside `scroller` so it is fully visible (no scrollIntoView). */
+export function scrollChildIntoScroller(
+  scroller: HTMLElement,
+  el: HTMLElement,
+  pad = 12,
+) {
+  const elRect = el.getBoundingClientRect();
+  const scRect = scroller.getBoundingClientRect();
+  if (elRect.top < scRect.top + pad) {
+    scroller.scrollTop -= scRect.top + pad - elRect.top;
+  } else if (elRect.bottom > scRect.bottom - pad) {
+    scroller.scrollTop += elRect.bottom - (scRect.bottom - pad);
+  }
+}

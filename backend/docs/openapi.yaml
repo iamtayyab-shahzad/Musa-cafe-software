@@ -476,3 +476,10 @@ components:
           type: string
         instagram:
           type: string
+        drink_flavors:
+          type: string
+        default_site_theme:
+          type: string
+        pos_one_click_complete:
+          type: boolean
+          description: When true, POS Save Pending completes the order and prints kitchen + customer receipts.

@@ -82,6 +82,8 @@ export type RestaurantSettings = {
   currency: string;
   cashOnDeliveryFee: number;
   drinkFlavors: string[];
+  /** POS: Save Pending also completes and prints both receipts */
+  posOneClickComplete: boolean;
 };
 
 export type Customer = {
@@ -206,5 +208,6 @@ export function emptyRestaurantSettings(): RestaurantSettings {
     currency: "Rs",
     cashOnDeliveryFee: 0,
     drinkFlavors: [],
+    posOneClickComplete: false,
   };
 }

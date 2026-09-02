@@ -163,6 +163,10 @@ func (s *SettingService) UpdateFromDTO(input dto.UpdateSettingsRequest) (*domain
 			return nil, utils.NewAppError(http.StatusBadRequest, "invalid default_site_theme")
 		}
 	}
+	if input.PosOneClickComplete != nil {
+		patch.PosOneClickComplete = *input.PosOneClickComplete
+		cols = append(cols, "PosOneClickComplete")
+	}
 	if len(cols) == 0 {
 		return nil, utils.NewAppError(http.StatusBadRequest, "no fields to update")
 	}

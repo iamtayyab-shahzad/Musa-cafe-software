@@ -30,7 +30,7 @@ import { isOnline } from "@/lib/network";
 import { getSyncState } from "@/lib/sync-engine";
 import { ordersShareIdentity } from "@/lib/order-identity";
 import { isPizzaSizeLabel } from "@/lib/is-pizza";
-import { isDialogOpen, isTextEntryTarget } from "@/lib/pos-keyboard";
+import { isDialogOpen, isTextEntryTarget, createHoverSelectGate, scrollChildIntoScroller } from "@/lib/pos-keyboard";
 import type { Order, OrderType, PaymentMethod } from "@/types";
 
 type FilterType = "all" | "website" | "phone" | "walkin";
@@ -71,6 +71,9 @@ export default function PendingOrdersPage() {
   const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
   const [kbIndex, setKbIndex] = useState(0);
   const listRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const kbIndexRef = useRef(0);
+  const hoverGateRef = useRef(createHoverSelectGate());
 
   const { data: settings } = useQuery({
     queryKey: ["settings"],
@@ -122,16 +125,24 @@ export default function PendingOrdersPage() {
   }, [filter, filtered.length]);
 
   useEffect(() => {
+    kbIndexRef.current = kbIndex;
+  }, [kbIndex]);
+
+  useEffect(() => {
     if (kbIndex < 0) return;
     const el = listRef.current?.querySelector(
       `[data-kb-order-index="${kbIndex}"]`,
-    );
-    el?.scrollIntoView({ block: "nearest" });
+    ) as HTMLElement | null;
+    const scroller = scrollRef.current;
+    if (!el || !scroller) return;
+    scrollChildIntoScroller(scroller, el, 20);
   }, [kbIndex]);
 
   const reprintKitchenRef = useRef<(order: Order) => void>(() => {});
   const completeRef = useRef<(order: Order) => void>(() => {});
   const editRef = useRef<(order: Order) => void>(() => {});
+  const filteredRef = useRef(filtered);
+  filteredRef.current = filtered;
 
   const counts = useMemo(() => {
     const website = orders.filter(
@@ -265,45 +276,66 @@ export default function PendingOrdersPage() {
       if (isDialogOpen() || cancelTarget) return;
       if (isTextEntryTarget(e.target)) return;
 
+      const list = filteredRef.current;
+
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        if (!filtered.length) return;
-        setKbIndex((i) => Math.min(filtered.length - 1, (i < 0 ? 0 : i) + 1));
+        if (!list.length) return;
+        hoverGateRef.current.markKeyboard();
+        setKbIndex((i) => {
+          const cur = i < 0 ? 0 : i;
+          return Math.min(list.length - 1, cur + 1);
+        });
         return;
       }
       if (e.key === "ArrowUp") {
         e.preventDefault();
-        if (!filtered.length) return;
-        setKbIndex((i) => Math.max(0, (i < 0 ? 0 : i) - 1));
+        if (!list.length) return;
+        hoverGateRef.current.markKeyboard();
+        setKbIndex((i) => {
+          const cur = i < 0 ? 0 : i;
+          return Math.max(0, cur - 1);
+        });
         return;
       }
       if (e.key === "Enter") {
         e.preventDefault();
-        const order = filtered[kbIndex];
+        const order = list[kbIndexRef.current];
         if (!order) return;
         reprintKitchenRef.current(order);
         return;
       }
       if (e.key === "c" || e.key === "C") {
         e.preventDefault();
-        const order = filtered[kbIndex];
+        const order = list[kbIndexRef.current];
         if (!order) return;
         completeRef.current(order);
         return;
       }
       if (e.key === "e" || e.key === "E") {
         e.preventDefault();
-        const order = filtered[kbIndex];
+        const order = list[kbIndexRef.current];
         if (!order) return;
         editRef.current(order);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [cancelTarget, filtered, kbIndex]);
+  }, [cancelTarget]);
+
+  const selectOrderIndex = (index: number) => {
+    if (!hoverGateRef.current.allowHover()) return;
+    setKbIndex(index);
+  };
 
   return (
-    <div className="h-full overflow-y-auto p-4 md:p-6">
+    <div
+      ref={scrollRef}
+      className="h-full overflow-y-auto p-4 md:p-6"
+      onMouseMove={(e) =>
+        hoverGateRef.current.onPointerMove(e.clientX, e.clientY)
+      }
+    >
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-3xl font-black">Pending Orders</h1>
@@ -363,10 +395,10 @@ export default function PendingOrdersPage() {
             <div
               key={order.id}
               data-kb-order-index={index}
-              onMouseEnter={() => setKbIndex(index)}
-              onClick={() => setKbIndex(index)}
+              onMouseEnter={() => selectOrderIndex(index)}
+              onClick={() => selectOrderIndex(index)}
               className={cn(
-                "rounded-xl border bg-zinc-950 p-4",
+                "relative rounded-xl border bg-zinc-950 p-4",
                 order.order_type === "website" || order.order_type === "guest"
                   ? "border-sky-500/50"
                   : "border-zinc-800",

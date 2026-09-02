@@ -293,6 +293,7 @@ const emptySettings = (): Settings => ({
   google_maps: "",
   facebook: "",
   instagram: "",
+  pos_one_click_complete: false,
 });
 
 export const settingsRepo = {

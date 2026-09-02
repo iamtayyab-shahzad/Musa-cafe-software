@@ -141,6 +141,11 @@ export interface Settings extends BaseEntity {
   instagram: string;
   /** JSON string array of soft-drink flavors available in shop. */
   drink_flavors?: string;
+  /**
+   * When true, POS Save Pending / Enter finalize completes the order and
+   * prints kitchen + customer receipts. Default false = classic flow.
+   */
+  pos_one_click_complete?: boolean;
 }
 
 export type PaymentMethod =

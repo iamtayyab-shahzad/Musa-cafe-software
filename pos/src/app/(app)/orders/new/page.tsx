@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type MouseEvent as ReactMouseEvent,
 } from "react";
 import dynamic from "next/dynamic";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -66,9 +67,11 @@ import {
 } from "@/services/api";
 import {
   countGridColumns,
+  createHoverSelectGate,
   isDialogOpen,
   isTextEntryTarget,
   moveGridIndex,
+  scrollChildIntoScroller,
 } from "@/lib/pos-keyboard";
 import type { Customer, Order, OrderItem, Product, ProductSize } from "@/types";
 
@@ -87,6 +90,12 @@ const DrinkFlavorDialog = dynamic(
 const ManualPriceDialog = dynamic(
   () =>
     import("@/components/manual-price-dialog").then((m) => m.ManualPriceDialog),
+  { ssr: false },
+);
+
+const PizzaSizeDialog = dynamic(
+  () =>
+    import("@/components/pizza-size-dialog").then((m) => m.PizzaSizeDialog),
   { ssr: false },
 );
 
@@ -110,11 +119,16 @@ export default function NewOrderPage() {
   const [manualPriceProduct, setManualPriceProduct] = useState<Product | null>(
     null,
   );
+  const [pizzaSizeProduct, setPizzaSizeProduct] = useState<Product | null>(
+    null,
+  );
   /** Keyboard highlight index in the visible product grid (−1 = none). */
   const [kbIndex, setKbIndex] = useState(0);
   const gridRef = useRef<HTMLDivElement | null>(null);
+  const menuScrollRef = useRef<HTMLDivElement | null>(null);
   const tableInputRef = useRef<HTMLInputElement | null>(null);
   const kbIndexRef = useRef(0);
+  const hoverGateRef = useRef(createHoverSelectGate());
   const placeOrderRef = useRef<(status: "COMPLETED" | "PENDING") => void>(
     () => {},
   );
@@ -217,6 +231,11 @@ export default function NewOrderPage() {
       const sizes = isPizzaProduct(product)
         ? pizzaSellableSizes(product.sizes)
         : product.sizes || [];
+      const multiSize = isPizzaProduct(product) && sizes.length > 1;
+      if (multiSize && !size) {
+        setPizzaSizeProduct(product);
+        return;
+      }
       const chosen = size || sizes[0] || product.sizes?.[0];
       if (!chosen) {
         toast.error("No sizes configured for this product");
@@ -240,6 +259,13 @@ export default function NewOrderPage() {
       }
     },
     [bill.addProduct], // addProduct is stable from BillProvider
+  );
+
+  const onPizzaSizeConfirm = useCallback(
+    (product: Product, size: ProductSize) => {
+      onProductClick(product, size);
+    },
+    [onProductClick],
   );
 
   const onManualPriceConfirm = (
@@ -452,6 +478,14 @@ export default function NewOrderPage() {
   const placeOrder = (status: "COMPLETED" | "PENDING") => {
     if (!validate() || busy) return;
 
+    // Optional admin setting: Save Pending / Enter also completes + dual print.
+    // Default off — production keeps classic pending → complete flow.
+    const oneClick =
+      status === "PENDING" && Boolean(settings?.pos_one_click_complete);
+    const effectiveStatus: "COMPLETED" | "PENDING" = oneClick
+      ? "COMPLETED"
+      : status;
+
     setBusy(true);
 
     // Snapshot everything needed BEFORE clearing the cart so UI can finish instantly.
@@ -484,7 +518,7 @@ export default function NewOrderPage() {
         cached?.order_number ||
         `LOCAL-${clientId.slice(0, 8).toUpperCase()}`,
       order_type: orderType,
-      order_status: status,
+      order_status: effectiveStatus,
       customer_name: payload.customer_name,
       phone: payload.phone,
       address: payload.address,
@@ -512,7 +546,7 @@ export default function NewOrderPage() {
     const printable = recomputeOrderMoney(enrichOrderForPrint(order));
     localStorage.setItem(LAST_RECEIPT_KEY, JSON.stringify(printable));
 
-    if (status === "PENDING") {
+    if (effectiveStatus === "PENDING") {
       qc.setQueryData<Order[]>(["orders", "pending"], (old) => {
         const list = old || [];
         const without = list.filter((o) => !ordersShareIdentity(o, printable));
@@ -546,7 +580,7 @@ export default function NewOrderPage() {
             cash_on_delivery_fee: printable.cash_on_delivery_fee,
             grand_total: printable.grand_total,
           });
-          if (status === "COMPLETED") {
+          if (effectiveStatus === "COMPLETED") {
             await ordersApi.complete(editingOrderId);
           }
         } else {
@@ -554,12 +588,24 @@ export default function NewOrderPage() {
             { ...payload, client_order_id: clientId },
             orderType,
           );
-          if (status === "COMPLETED") {
+          if (effectiveStatus === "COMPLETED") {
             await ordersApi.complete(created.id);
           }
         }
 
-        if (status === "COMPLETED") {
+        if (oneClick) {
+          // Kitchen first, then customer — print queue runs them in order.
+          const kitchenPrint = await printKitchenReceipt(printable);
+          const customerPrint = await printCustomerReceipt(
+            { ...printable, order_status: "COMPLETED" },
+            settings || null,
+          );
+          toast.success(
+            !kitchenPrint || !customerPrint
+              ? "Order completed — allow popups if a receipt did not print"
+              : "Order completed — kitchen & customer receipts printed",
+          );
+        } else if (effectiveStatus === "COMPLETED") {
           void printCustomerReceipt(printable, settings || null).then(
             (printed) => {
               toast.success(
@@ -636,15 +682,27 @@ export default function NewOrderPage() {
   const addHighlightedProduct = useCallback(() => {
     const idx = kbIndexRef.current;
     if (idx < 0 || idx >= filtered.length) {
-      toast.message("No product selected — press ↓ from search");
+      toast.message("No product selected — use ↑↓ while searching");
       return;
     }
-    const product = filtered[idx];
-    const sizes = isPizzaProduct(product)
-      ? pizzaSellableSizes(product.sizes)
-      : product.sizes || [];
-    onProductClick(product, sizes[0]);
+    onProductClick(filtered[idx]);
   }, [filtered, onProductClick]);
+
+  const markKbNav = useCallback(() => {
+    hoverGateRef.current.markKeyboard();
+  }, []);
+
+  const selectProductIndex = useCallback((index: number) => {
+    if (!hoverGateRef.current.allowHover()) return;
+    setKbIndex(index);
+  }, []);
+
+  const onMenuPointerMove = useCallback(
+    (e: ReactMouseEvent<HTMLDivElement>) => {
+      hoverGateRef.current.onPointerMove(e.clientX, e.clientY);
+    },
+    [],
+  );
 
   const focusTableOrSavePending = useCallback(() => {
     if (busy) return;
@@ -663,13 +721,15 @@ export default function NewOrderPage() {
     placeOrderRef.current("PENDING");
   }, [busy, bill.items.length, bill.serviceMode, bill.tableNumber, isWalkin]);
 
-  // Scroll highlighted tile into view
+  // Scroll highlighted tile into view (manual — avoids hover steal)
   useEffect(() => {
     if (kbIndex < 0) return;
     const el = gridRef.current?.querySelector(
       `[data-kb-product-index="${kbIndex}"]`,
-    );
-    el?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    ) as HTMLElement | null;
+    const scroller = menuScrollRef.current;
+    if (!el || !scroller) return;
+    scrollChildIntoScroller(scroller, el, 12);
   }, [kbIndex]);
 
   useEffect(() => {
@@ -679,6 +739,7 @@ export default function NewOrderPage() {
         dealProduct ||
         drinkProduct ||
         manualPriceProduct ||
+        pizzaSizeProduct ||
         cancelPasswordOpen
       ) {
         return;
@@ -727,13 +788,23 @@ export default function NewOrderPage() {
         return;
       }
 
-      // From search: ↓ enters grid, Enter adds highlighted
+      const isArrow =
+        e.key === "ArrowDown" ||
+        e.key === "ArrowUp" ||
+        e.key === "ArrowLeft" ||
+        e.key === "ArrowRight";
+
+      // From search: arrows move product highlight (keep typing focus)
       if (inSearch) {
-        if (e.key === "ArrowDown") {
+        if (isArrow) {
           e.preventDefault();
           if (!filtered.length) return;
-          setKbIndex(0);
-          (target as HTMLInputElement)?.blur();
+          const cols = countGridColumns(gridRef.current);
+          markKbNav();
+          setKbIndex((prev) => {
+            const start = prev < 0 ? 0 : prev;
+            return moveGridIndex(start, e.key, filtered.length, cols);
+          });
           return;
         }
         if (e.key === "Enter") {
@@ -747,15 +818,11 @@ export default function NewOrderPage() {
       // Don't steal keys from other inputs (phone, price, etc.)
       if (isTextEntryTarget(target) && !inTable) return;
 
-      if (
-        e.key === "ArrowDown" ||
-        e.key === "ArrowUp" ||
-        e.key === "ArrowLeft" ||
-        e.key === "ArrowRight"
-      ) {
+      if (isArrow) {
         e.preventDefault();
         if (!filtered.length) return;
         const cols = countGridColumns(gridRef.current);
+        markKbNav();
         setKbIndex((prev) => {
           const start = prev < 0 ? 0 : prev;
           return moveGridIndex(start, e.key, filtered.length, cols);
@@ -780,6 +847,8 @@ export default function NewOrderPage() {
     focusSearch,
     focusTableOrSavePending,
     manualPriceProduct,
+    markKbNav,
+    pizzaSizeProduct,
   ]);
 
   return (
@@ -809,9 +878,9 @@ export default function NewOrderPage() {
         ) : null}
         <div className="flex flex-wrap items-center gap-2 border-b border-zinc-800 px-3 py-2 text-xs text-zinc-500">
           <span className="font-semibold text-orange-400/90">Keyboard</span>
-          <span>↑↓←→ move</span>
+          <span>↑↓←→ move (also while searching)</span>
           <span>·</span>
-          <span>Enter add</span>
+          <span>Enter add / choose size</span>
           <span>·</span>
           <span>/ search</span>
           <span>·</span>
@@ -860,7 +929,11 @@ export default function NewOrderPage() {
             ))}
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-3">
+        <div
+          ref={menuScrollRef}
+          className="min-h-0 flex-1 overflow-y-auto p-3"
+          onMouseMove={onMenuPointerMove}
+        >
           <div
             ref={gridRef}
             className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4"
@@ -873,7 +946,7 @@ export default function NewOrderPage() {
                 onAdd={onProductClick}
                 keyboardFocused={index === kbIndex}
                 kbIndex={index}
-                onKeyboardSelect={() => setKbIndex(index)}
+                onKeyboardSelect={() => selectProductIndex(index)}
               />
             ))}
           </div>
@@ -1213,7 +1286,13 @@ export default function NewOrderPage() {
             onClick={() => placeOrder("PENDING")}
             disabled={busy}
           >
-            {bill.editingOrderId ? "Update Pending" : "Save Pending"}
+            {bill.editingOrderId
+              ? settings?.pos_one_click_complete
+                ? "Update & Complete"
+                : "Update Pending"
+              : settings?.pos_one_click_complete
+                ? "Print & Complete"
+                : "Save Pending"}
           </Button>
           <Button variant="outline" onClick={reprint}>
             <Printer className="h-4 w-4" /> Reprint
@@ -1271,6 +1350,17 @@ export default function NewOrderPage() {
         }}
         onConfirm={onManualPriceConfirm}
       />
+      <PizzaSizeDialog
+        open={Boolean(pizzaSizeProduct)}
+        product={pizzaSizeProduct}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPizzaSizeProduct(null);
+            focusSearch();
+          }
+        }}
+        onConfirm={onPizzaSizeConfirm}
+      />
       <CancelOrderPasswordDialog
         open={cancelPasswordOpen}
         onOpenChange={setCancelPasswordOpen}
@@ -1321,7 +1411,8 @@ function ProductTile({
         type="button"
         onClick={() => {
           onKeyboardSelect?.();
-          if (!multiSize) onAdd(product, sizes[0]);
+          if (multiSize) onAdd(product);
+          else onAdd(product, sizes[0]);
         }}
         className={cn(
           "w-full text-left",

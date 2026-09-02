@@ -165,7 +165,19 @@ describe("kitchen ticket layout", () => {
     const customer = buildCustomerReceiptHtml(order, null);
     expect(kitchen).toContain("TABLE 7");
     expect(kitchen).toContain("Dine In");
+    expect(kitchen).not.toContain("Ticket No");
+    expect(kitchen).not.toContain("Walk-in Customer");
     expect(customer).toContain("TABLE 7");
+    expect(customer).toContain("table-line");
+    expect(customer).not.toContain("table-big");
+    expect(customer).not.toContain("Dine In");
+    expect(customer).not.toContain("Order:");
+    expect(customer).not.toContain("Walk-in Customer");
+    expect(customer).not.toContain("Phone: 0000000000");
+    expect(customer).not.toContain("Address: In Store");
+    expect(customer).toContain("Musa Cafe");
+    // Date · time (and shop phone when settings present) on one meta line
+    expect(customer).toMatch(/class="meta">[\s\S]*? · /);
   });
 
   it("prints Parcel for walk-in parcel service mode", () => {
@@ -292,7 +304,10 @@ describe("kitchen ticket layout", () => {
     expect(customer).not.toContain("www.krunchies.pk");
     expect(customer).toContain("Musa Cafe");
     expect(customer).toContain("Staff notes:");
-    expect(customer).not.toContain("font-weight: 800");
+    expect(customer).toContain("font-weight: 800"); // shop name
+    expect(customer).not.toContain("font-weight: 900");
+    expect(customer).not.toContain("Order:");
+    expect(customer).not.toContain("Walk-in Customer");
   });
 });
 

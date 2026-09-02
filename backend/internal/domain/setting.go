@@ -20,4 +20,8 @@ type Setting struct {
 	// DefaultSiteTheme is the first-visit website appearance:
 	// dark | dim | light | warm
 	DefaultSiteTheme string `gorm:"size:20;not null;default:'dark'" json:"default_site_theme"`
+	// PosOneClickComplete: when true, POS "Save Pending" / Enter finalize
+	// completes the order and prints kitchen + customer receipts together.
+	// Default false keeps the classic pending → later complete flow.
+	PosOneClickComplete bool `gorm:"not null;default:false" json:"pos_one_click_complete"`
 }

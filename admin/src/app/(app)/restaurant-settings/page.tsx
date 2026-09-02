@@ -17,6 +17,7 @@ import {
 } from "@/lib/image-upload";
 import { emptyRestaurantSettings, type RestaurantSettings } from "@/lib/types";
 import { settingsApi } from "@/services/api";
+import { Switch } from "@/components/ui/switch";
 
 export default function RestaurantSettingsPage() {
   const [form, setForm] = useState<RestaurantSettings>(emptyRestaurantSettings);
@@ -40,6 +41,7 @@ export default function RestaurantSettingsPage() {
           currency: s.currency || "Rs",
           cashOnDeliveryFee: s.cash_on_delivery_fee ?? 0,
           drinkFlavors: parseDrinkFlavors(s.drink_flavors),
+          posOneClickComplete: Boolean(s.pos_one_click_complete),
         });
       })
       .catch((e) =>
@@ -85,6 +87,7 @@ export default function RestaurantSettingsPage() {
         currency: form.currency,
         cash_on_delivery_fee: Number(form.cashOnDeliveryFee || 0),
         drink_flavors: serializeDrinkFlavors(form.drinkFlavors),
+        pos_one_click_complete: form.posOneClickComplete,
       });
       toast.success("Restaurant settings saved");
     } catch (e) {
@@ -108,7 +111,7 @@ export default function RestaurantSettingsPage() {
     <div>
       <PageHeader
         title="Restaurant Settings"
-        description="Core restaurant identity, hours, currency, COD fee, and drink flavors"
+        description="Core restaurant identity, hours, currency, COD fee, POS print mode, and drink flavors"
         action={
           <Button onClick={save} disabled={saving}>
             {saving ? "Saving..." : "Save Settings"}
@@ -221,6 +224,27 @@ export default function RestaurantSettingsPage() {
                   cashOnDeliveryFee: Number(e.target.value),
                 })
               }
+            />
+          </div>
+        </div>
+
+        <div className="space-y-3 border-t border-zinc-800 pt-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <Label>POS one-click complete</Label>
+              <p className="mt-1 text-sm text-zinc-500">
+                When enabled, cashier Save Pending / Enter prints the kitchen
+                ticket and the customer receipt together, and marks the order
+                completed. When off, the normal pending → complete flow is
+                unchanged.
+              </p>
+            </div>
+            <Switch
+              checked={form.posOneClickComplete}
+              onCheckedChange={(on) =>
+                setForm({ ...form, posOneClickComplete: on })
+              }
+              aria-label="POS one-click complete"
             />
           </div>
         </div>

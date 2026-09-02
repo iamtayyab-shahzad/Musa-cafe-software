@@ -424,6 +424,14 @@ export function buildKitchenReceiptHtml(order: Order) {
     (sum, item) => sum + (Number(item.quantity) || 0),
     0,
   );
+  const kitchenCustomerName = (order.customer_name || "").trim();
+  const showKitchenCustomer =
+    Boolean(kitchenCustomerName) &&
+    order.order_type !== "walkin" &&
+    !/^walk[-\s]?in(\s+customer)?$/i.test(kitchenCustomerName);
+  const kitchenCustomerHtml = showKitchenCustomer
+    ? `<div>Customer : ${escapeHtml(kitchenCustomerName)}</div>`
+    : "";
 
   const itemsHtml = (order.items || [])
     .map((item) => {
@@ -592,9 +600,8 @@ export function buildKitchenReceiptHtml(order: Order) {
   <div class="service-big">${escapeHtml(kitchenOrderTypeLabel(order.order_type, order.order_notes))}</div>
   <div class="banner">* Kitchen Order Ticket *</div>
   <div class="meta">
-    <div>Ticket No. : ${escapeHtml(order.order_number || order.id)}</div>
     <div>Bill Date : ${escapeHtml(date)} ${escapeHtml(time)}</div>
-    <div>Customer : ${escapeHtml(order.customer_name || "—")}</div>
+    ${kitchenCustomerHtml}
   </div>
   <table>
     <colgroup>
@@ -676,6 +683,30 @@ export function buildCustomerReceiptHtml(
   const tax = 0;
   const siteHost = publicSiteHost();
   const notes = stripTableFromNotes(order.order_notes);
+  const isWalkin = order.order_type === "walkin";
+  const customerName = (order.customer_name || "").trim();
+  const showCustomer =
+    Boolean(customerName) &&
+    !(
+      isWalkin ||
+      /^walk[-\s]?in(\s+customer)?$/i.test(customerName)
+    );
+  const phone = (order.phone || "").trim();
+  const showPhone = Boolean(phone) && !/^0+$/.test(phone);
+  const address = (order.address || "").trim();
+  const showAddress =
+    Boolean(address) && !(/^in\s*store$/i.test(address) && isWalkin);
+  const customerInfoHtml = [
+    showCustomer
+      ? `<div class="info">Customer: ${escapeHtml(customerName)}</div>`
+      : "",
+    showPhone ? `<div class="info">Phone: ${escapeHtml(phone)}</div>` : "",
+    showAddress
+      ? `<div class="info">Address: ${escapeHtml(address)}</div>`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n  ");
 
   return `<!DOCTYPE html>
 <html>
@@ -683,7 +714,7 @@ export function buildCustomerReceiptHtml(
 <meta charset="utf-8" />
 <title>Receipt ${escapeHtml(order.order_number || order.id)}</title>
 <style>
-  @page { size: 80mm auto; margin: 2mm 5mm 2mm 2mm; }
+  @page { size: 80mm auto; margin: 0 5mm 2mm 2mm; }
   * { box-sizing: border-box; }
   body {
     font-family: Arial, Helvetica, sans-serif;
@@ -704,18 +735,23 @@ export function buildCustomerReceiptHtml(
     print-color-adjust: exact;
   }
   h1 {
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 18px;
+    font-weight: 800;
     text-align: center;
-    margin: 0 0 3px;
-    letter-spacing: 0.3px;
+    margin: 0 0 2px;
+    letter-spacing: 0.4px;
     text-transform: uppercase;
   }
   .meta {
     text-align: center;
-    margin-bottom: 5px;
-    font-size: 12px;
+    margin-bottom: 4px;
+    font-size: 11px;
     font-weight: 400;
+    line-height: 1.35;
+  }
+  .meta .reprint {
+    font-weight: 700;
+    margin-top: 1px;
   }
   .info {
     font-size: 12px;
@@ -840,22 +876,15 @@ export function buildCustomerReceiptHtml(
     min-height: 18mm;
     font-size: 11px;
   }
-  .table-big {
+  .table-line {
     text-align: center;
-    font-size: 32px;
-    font-weight: 900;
-    line-height: 1.05;
-    letter-spacing: 1px;
-    border: 2px solid #000;
-    padding: 8px 4px;
-    margin: 0 0 6px;
-    text-transform: uppercase;
-  }
-  .service-line {
-    text-align: center;
-    font-size: 14px;
+    font-size: 18px;
     font-weight: 700;
-    margin: 0 0 4px;
+    line-height: 1.15;
+    letter-spacing: 0.5px;
+    border: 1.5px solid #000;
+    padding: 3px 4px;
+    margin: 0 0 3px;
     text-transform: uppercase;
   }
 </style>
@@ -864,24 +893,21 @@ export function buildCustomerReceiptHtml(
   <h1>${escapeHtml(settings?.restaurant_name || shop.name)}</h1>
   ${
     parseTableNumber(order.order_notes)
-      ? `<div class="table-big">TABLE ${escapeHtml(parseTableNumber(order.order_notes))}</div>`
-      : ""
-  }
-  ${
-    order.order_type === "walkin"
-      ? `<div class="service-line">${escapeHtml(kitchenOrderTypeLabel(order.order_type, order.order_notes))}</div>`
+      ? `<div class="table-line">TABLE ${escapeHtml(parseTableNumber(order.order_notes))}</div>`
       : ""
   }
   <div class="meta">
-    ${escapeHtml(settings?.phone || "")}<br/>
-    ${reprint ? "<strong>REPRINT</strong><br/>" : ""}
-    ${escapeHtml(when.toLocaleDateString("en-PK"))}<br/>
-    ${escapeHtml(when.toLocaleTimeString("en-PK"))}
+    ${[
+      settings?.phone?.trim() || "",
+      when.toLocaleDateString("en-PK"),
+      when.toLocaleTimeString("en-PK"),
+    ]
+      .filter(Boolean)
+      .map((part) => escapeHtml(part))
+      .join(" · ")}
+    ${reprint ? `<div class="reprint">REPRINT</div>` : ""}
   </div>
-  <div class="info">Order: ${escapeHtml(order.order_number || order.id)}</div>
-  <div class="info">Customer: ${escapeHtml(order.customer_name)}</div>
-  ${order.phone ? `<div class="info">Phone: ${escapeHtml(order.phone)}</div>` : ""}
-  ${order.address ? `<div class="info">Address: ${escapeHtml(order.address)}</div>` : ""}
+  ${customerInfoHtml}
   <div class="info">Payment: ${escapeHtml((order.payment_method || "").toUpperCase())}</div>
   <hr />
   <table>
