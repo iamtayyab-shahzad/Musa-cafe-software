@@ -180,6 +180,35 @@ describe("kitchen ticket layout", () => {
     expect(customer).toMatch(/class="meta">[\s\S]*? · /);
   });
 
+  it("prints large daily order number on kitchen and customer tickets", () => {
+    const order = ensureReceiptItemNames(
+      {
+        ...baseOrder([
+          {
+            id: "i1",
+            created_at: "",
+            updated_at: "",
+            order_id: "ord-1",
+            product_id: "p1",
+            product_size_id: "s1",
+            quantity: 1,
+            price: 100,
+            product_name: "Zinger Burger",
+          },
+        ]),
+        daily_number: 12,
+        business_date: "2026-09-03",
+        order_notes: "SERVICE:DINE_IN | TABLE:7",
+      },
+    );
+    const kitchen = buildKitchenReceiptHtml(order);
+    const customer = buildCustomerReceiptHtml(order, null);
+    expect(kitchen).toContain("#12");
+    expect(kitchen).toContain("daily-big");
+    expect(customer).toContain("#12");
+    expect(customer).toContain("daily-line");
+  });
+
   it("prints Parcel for walk-in parcel service mode", () => {
     const order = ensureReceiptItemNames(
       {
@@ -305,7 +334,6 @@ describe("kitchen ticket layout", () => {
     expect(customer).toContain("Musa Cafe");
     expect(customer).toContain("Staff notes:");
     expect(customer).toContain("font-weight: 800"); // shop name
-    expect(customer).not.toContain("font-weight: 900");
     expect(customer).not.toContain("Order:");
     expect(customer).not.toContain("Walk-in Customer");
   });

@@ -454,6 +454,15 @@ async function processAction(
           localExisting?.created_at,
           preferEarlierCreatedAt(p.input.created_at, order.created_at),
         ),
+        // Prefer server daily token; fall back to local offline assignment.
+        business_date:
+          order.business_date ||
+          localExisting?.business_date ||
+          p.input.business_date,
+        daily_number:
+          order.daily_number ||
+          localExisting?.daily_number ||
+          p.input.daily_number,
         order_status: orderStatus,
         // Keep pending_sync until follow-up COMPLETE/CANCEL PATCH succeeds.
         sync_status:
@@ -462,6 +471,15 @@ async function processAction(
             : ("synced" as const),
       };
       await upsertLocalOrder(syncedOrder);
+      if (syncedOrder.business_date && syncedOrder.daily_number) {
+        const { noteServerDailyNumber } = await import(
+          "@/lib/daily-order-number"
+        );
+        await noteServerDailyNumber(
+          syncedOrder.business_date,
+          syncedOrder.daily_number,
+        );
+      }
 
       if (p.localId) {
         await mapLocalToServerId(p.localId, order.id);

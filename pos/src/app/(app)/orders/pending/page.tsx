@@ -411,6 +411,11 @@ export default function PendingOrdersPage() {
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0 flex-1 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
+                    {order.daily_number && order.daily_number > 0 ? (
+                      <p className="text-2xl font-black text-orange-400">
+                        #{order.daily_number}
+                      </p>
+                    ) : null}
                     <p className="text-lg font-bold text-white">
                       {order.order_number}
                     </p>

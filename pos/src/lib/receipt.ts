@@ -588,10 +588,31 @@ export function buildKitchenReceiptHtml(order: Order) {
     margin: 0 0 6px;
     text-transform: uppercase;
   }
+  .daily-big {
+    text-align: center;
+    font-size: 36px;
+    font-weight: 900;
+    line-height: 1.05;
+    letter-spacing: 1px;
+    border: 2px solid #000;
+    padding: 6px 4px;
+    margin: 0 0 6px;
+  }
+  .daily-big .lbl {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
 </style>
 </head>
 <body>
   <div class="shop">${escapeHtml(shop.name)}</div>
+  ${
+    order.daily_number && order.daily_number > 0
+      ? `<div class="daily-big"><span class="lbl">ORDER</span>#${order.daily_number}</div>`
+      : ""
+  }
   ${
     parseTableNumber(order.order_notes)
       ? `<div class="table-big">TABLE ${escapeHtml(parseTableNumber(order.order_notes))}</div>`
@@ -887,10 +908,30 @@ export function buildCustomerReceiptHtml(
     margin: 0 0 3px;
     text-transform: uppercase;
   }
+  .daily-line {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 900;
+    line-height: 1.1;
+    border: 2px solid #000;
+    padding: 4px;
+    margin: 0 0 4px;
+  }
+  .daily-line .lbl {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+  }
 </style>
 </head>
 <body>
   <h1>${escapeHtml(settings?.restaurant_name || shop.name)}</h1>
+  ${
+    order.daily_number && order.daily_number > 0
+      ? `<div class="daily-line"><span class="lbl">ORDER</span>#${order.daily_number}</div>`
+      : ""
+  }
   ${
     parseTableNumber(order.order_notes)
       ? `<div class="table-line">TABLE ${escapeHtml(parseTableNumber(order.order_notes))}</div>`

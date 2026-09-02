@@ -24,4 +24,7 @@ type Setting struct {
 	// completes the order and prints kitchen + customer receipts together.
 	// Default false keeps the classic pending → later complete flow.
 	PosOneClickComplete bool `gorm:"not null;default:false" json:"pos_one_click_complete"`
+	// PosAllowHistoryEdit: when true, POS Order History shows Edit for past
+	// tickets. Default false so completed sales stay locked unless enabled.
+	PosAllowHistoryEdit bool `gorm:"not null;default:false" json:"pos_allow_history_edit"`
 }

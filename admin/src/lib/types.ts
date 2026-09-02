@@ -84,6 +84,8 @@ export type RestaurantSettings = {
   drinkFlavors: string[];
   /** POS: Save Pending also completes and prints both receipts */
   posOneClickComplete: boolean;
+  /** POS: allow Edit from Order History */
+  posAllowHistoryEdit: boolean;
 };
 
 export type Customer = {
@@ -209,5 +211,6 @@ export function emptyRestaurantSettings(): RestaurantSettings {
     cashOnDeliveryFee: 0,
     drinkFlavors: [],
     posOneClickComplete: false,
+    posAllowHistoryEdit: false,
   };
 }

@@ -63,6 +63,31 @@ func resolveClientCreatedAt(raw *time.Time) time.Time {
 	return t
 }
 
+// allocateDailyNumber picks the next 1..N token for a Karachi business day.
+// If the POS sends a free hint, that value is kept (offline print match).
+func allocateDailyNumber(tx *gorm.DB, businessDate string, hint *int) (int, error) {
+	var maxNum int
+	if err := tx.Model(&domain.Order{}).
+		Where("business_date = ?", businessDate).
+		Select("COALESCE(MAX(daily_number), 0)").
+		Scan(&maxNum).Error; err != nil {
+		return 0, err
+	}
+	next := maxNum + 1
+	if hint != nil && *hint > 0 {
+		var taken int64
+		if err := tx.Model(&domain.Order{}).
+			Where("business_date = ? AND daily_number = ?", businessDate, *hint).
+			Count(&taken).Error; err != nil {
+			return 0, err
+		}
+		if taken == 0 {
+			return *hint, nil
+		}
+	}
+	return next, nil
+}
+
 func (s *OrderService) CreateOrder(
 	input dto.CreateOrderRequest,
 	orderType string,
@@ -145,9 +170,27 @@ func (s *OrderService) CreateOrder(
 	saleTime := resolveClientCreatedAt(input.CreatedAt)
 	orderID := uuid.New()
 	prefix := shop.Current().OrderPrefix
+
+	businessDate := utils.BusinessDateYMD(saleTime)
+	if input.BusinessDate != nil {
+		hint := strings.TrimSpace(*input.BusinessDate)
+		if len(hint) == 10 {
+			businessDate = hint
+		}
+	}
+	dailyNumber, err := allocateDailyNumber(tx, businessDate, input.DailyNumber)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	// Unique public code (DB unique) while receipts show DailyNumber only.
+	orderNumber := fmt.Sprintf("%s-%s-%d", prefix, strings.ReplaceAll(businessDate, "-", ""), dailyNumber)
+
 	order := &domain.Order{
 		BaseModel:         domain.BaseModel{ID: orderID, CreatedAt: saleTime, UpdatedAt: time.Now().UTC()},
-		OrderNumber:       prefix + "-" + strings.ToUpper(strings.ReplaceAll(orderID.String(), "-", "")[:16]),
+		OrderNumber:       orderNumber,
+		BusinessDate:      businessDate,
+		DailyNumber:       dailyNumber,
 		ClientOrderID:     input.ClientOrderID,
 		CustomerID:        customerID,
 		CustomerName:      customerName,

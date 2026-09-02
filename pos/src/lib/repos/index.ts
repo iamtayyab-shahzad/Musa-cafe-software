@@ -294,6 +294,7 @@ const emptySettings = (): Settings => ({
   facebook: "",
   instagram: "",
   pos_one_click_complete: false,
+  pos_allow_history_edit: false,
 });
 
 export const settingsRepo = {

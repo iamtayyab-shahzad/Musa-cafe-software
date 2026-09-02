@@ -106,6 +106,10 @@ export interface OrderItem extends BaseEntity {
 
 export interface Order extends BaseEntity {
   order_number: string;
+  /** Asia/Karachi YYYY-MM-DD for daily tokens. */
+  business_date?: string;
+  /** Shop-facing 1,2,3… reset each business day. */
+  daily_number?: number;
   client_order_id?: string | null;
   customer_id?: string;
   customer_name: string;
@@ -146,6 +150,10 @@ export interface Settings extends BaseEntity {
    * prints kitchen + customer receipts. Default false = classic flow.
    */
   pos_one_click_complete?: boolean;
+  /**
+   * When true, Order History shows Edit. Default false locks past tickets.
+   */
+  pos_allow_history_edit?: boolean;
 }
 
 export type PaymentMethod =
@@ -188,6 +196,8 @@ export interface CreateOrderInput {
   client_order_id?: string;
   /** Original till timestamp (ISO). Backend must persist this, not sync time. */
   created_at?: string;
+  daily_number?: number;
+  business_date?: string;
   items: CreateOrderItemInput[];
 }
 

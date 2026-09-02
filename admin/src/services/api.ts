@@ -74,6 +74,7 @@ type BackendSetting = {
   /** First-visit website appearance: dark | dim | light | warm */
   default_site_theme?: string;
   pos_one_click_complete?: boolean;
+  pos_allow_history_edit?: boolean;
 };
 
 type BackendInventory = {
@@ -514,6 +515,7 @@ export type SettingsUpdatePayload = {
   /** First-visit website appearance: dark | dim | light | warm */
   default_site_theme?: string;
   pos_one_click_complete?: boolean;
+  pos_allow_history_edit?: boolean;
 };
 
 export const settingsApi = {

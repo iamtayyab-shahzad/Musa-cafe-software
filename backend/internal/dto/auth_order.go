@@ -42,9 +42,13 @@ type CreateOrderRequest struct {
 	OrderNotes    string                   `json:"order_notes" binding:"max=2000"`
 	ClientOrderID *uuid.UUID               `json:"client_order_id"`
 	// CreatedAt is the original till timestamp. If omitted, server time is used.
-	CreatedAt     *time.Time               `json:"created_at"`
-	IsGuest       bool                     `json:"is_guest"`
-	Items         []CreateOrderItemRequest `json:"items" binding:"required,min=1,dive"`
+	CreatedAt *time.Time `json:"created_at"`
+	// DailyNumber / BusinessDate are optional POS hints for offline-assigned
+	// shop tokens. Server prefers them when free; otherwise assigns next.
+	DailyNumber  *int    `json:"daily_number"`
+	BusinessDate *string `json:"business_date"`
+	IsGuest      bool    `json:"is_guest"`
+	Items        []CreateOrderItemRequest `json:"items" binding:"required,min=1,dive"`
 }
 
 type UpdateOrderRequest struct {
@@ -88,7 +92,8 @@ type UpdateSettingsRequest struct {
 	Instagram         *string `json:"instagram" binding:"omitempty,max=500"`
 	DrinkFlavors      *string `json:"drink_flavors" binding:"omitempty,max=2000"`
 	DefaultSiteTheme  *string `json:"default_site_theme" binding:"omitempty,oneof=dark dim light warm"`
-	PosOneClickComplete *bool `json:"pos_one_click_complete"`
+	PosOneClickComplete   *bool   `json:"pos_one_click_complete"`
+	PosAllowHistoryEdit   *bool   `json:"pos_allow_history_edit"`
 }
 
 type TokenResponse struct {

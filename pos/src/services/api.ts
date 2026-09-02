@@ -613,11 +613,31 @@ async function buildLocalOrder(
     cash_on_delivery_fee,
     discount,
   );
+  const { allocateLocalDailyNumber, uniqueOrderCode } = await import(
+    "@/lib/daily-order-number"
+  );
+  const { shop } = await import("@/lib/shop");
+  let business_date = (input.business_date || "").trim();
+  let daily_number = Number(input.daily_number) || 0;
+  if (!(daily_number > 0) || !business_date) {
+    const allocated = await allocateLocalDailyNumber(
+      input.created_at ? new Date(input.created_at) : new Date(),
+    );
+    business_date = allocated.businessDate;
+    daily_number = allocated.dailyNumber;
+  }
+  const created_at = input.created_at || now;
   return {
     id,
-    created_at: now,
+    created_at,
     updated_at: now,
-    order_number: `LOCAL-${id.slice(0, 8).toUpperCase()}`,
+    order_number: uniqueOrderCode(
+      shop.orderPrefix || "MC",
+      business_date,
+      daily_number,
+    ),
+    business_date,
+    daily_number,
     client_order_id: id,
     customer_name: input.customer_name,
     phone: input.phone,
@@ -710,6 +730,8 @@ export const ordersApi = {
     const queuedInput: CreateOrderInput = {
       ...apiInput,
       created_at: local.created_at,
+      daily_number: local.daily_number,
+      business_date: local.business_date,
     };
     if (!existing) {
       await enqueueAndTrack({

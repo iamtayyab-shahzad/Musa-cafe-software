@@ -61,6 +61,7 @@ func AutoMigrate(db *gorm.DB) error {
 		`CREATE INDEX IF NOT EXISTS idx_orders_status_created ON orders (order_status, created_at DESC)`,
 		`CREATE INDEX IF NOT EXISTS idx_orders_type_created ON orders (order_type, created_at DESC)`,
 		`CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders (created_at DESC)`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_business_daily ON orders (business_date, daily_number) WHERE daily_number > 0 AND business_date <> ''`,
 		`CREATE INDEX IF NOT EXISTS idx_inv_tx_type_created ON inventory_transactions (transaction_type, created_at)`,
 		`CREATE INDEX IF NOT EXISTS idx_inv_tx_inventory_created ON inventory_transactions (inventory_id, created_at DESC)`,
 		`CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items (order_id)`,

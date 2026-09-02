@@ -167,6 +167,10 @@ func (s *SettingService) UpdateFromDTO(input dto.UpdateSettingsRequest) (*domain
 		patch.PosOneClickComplete = *input.PosOneClickComplete
 		cols = append(cols, "PosOneClickComplete")
 	}
+	if input.PosAllowHistoryEdit != nil {
+		patch.PosAllowHistoryEdit = *input.PosAllowHistoryEdit
+		cols = append(cols, "PosAllowHistoryEdit")
+	}
 	if len(cols) == 0 {
 		return nil, utils.NewAppError(http.StatusBadRequest, "no fields to update")
 	}

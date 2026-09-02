@@ -483,3 +483,6 @@ components:
         pos_one_click_complete:
           type: boolean
           description: When true, POS Save Pending completes the order and prints kitchen + customer receipts.
+        pos_allow_history_edit:
+          type: boolean
+          description: When true, POS Order History shows Edit for past tickets.

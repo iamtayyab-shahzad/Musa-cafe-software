@@ -477,94 +477,121 @@ export default function NewOrderPage() {
 
   const placeOrder = (status: "COMPLETED" | "PENDING") => {
     if (!validate() || busy) return;
-
-    // Optional admin setting: Save Pending / Enter also completes + dual print.
-    // Default off — production keeps classic pending → complete flow.
-    const oneClick =
-      status === "PENDING" && Boolean(settings?.pos_one_click_complete);
-    const effectiveStatus: "COMPLETED" | "PENDING" = oneClick
-      ? "COMPLETED"
-      : status;
-
     setBusy(true);
 
-    // Snapshot everything needed BEFORE clearing the cart so UI can finish instantly.
-    const payload = buildPayload();
-    const editingOrderId = bill.editingOrderId;
-    const draftId = bill.draftId;
-    const orderType = bill.orderType;
-    const clientId = editingOrderId || crypto.randomUUID();
-    const now = new Date().toISOString();
-    const delivery = isWalkin ? 0 : bill.deliveryCharge;
-    const codFee = calcCodFee(
-      bill.paymentMethod,
-      settings?.cash_on_delivery_fee || 0,
-    );
-
-    const cached = editingOrderId
-      ? qc
-          .getQueryData<Order[]>(["orders", "pending"])
-          ?.find((o) => o.id === editingOrderId) ||
-        qc
-          .getQueryData<Order[]>(["orders"])
-          ?.find((o) => o.id === editingOrderId)
-      : undefined;
-
-    const order: Order = {
-      ...(cached || ({} as Order)),
-      id: clientId,
-      client_order_id: clientId,
-      order_number:
-        cached?.order_number ||
-        `LOCAL-${clientId.slice(0, 8).toUpperCase()}`,
-      order_type: orderType,
-      order_status: effectiveStatus,
-      customer_name: payload.customer_name,
-      phone: payload.phone,
-      address: payload.address,
-      location_id: payload.location_id,
-      payment_method: payload.payment_method,
-      order_notes: payload.order_notes,
-      subtotal: bill.subtotal,
-      discount: bill.discount,
-      delivery_charge: delivery,
-      cash_on_delivery_fee: cached?.cash_on_delivery_fee ?? codFee,
-      grand_total: calcGrandTotal(
-        bill.subtotal,
-        delivery,
-        cached?.cash_on_delivery_fee ?? codFee,
-        bill.discount,
-      ),
-      created_at: cached?.created_at || now,
-      updated_at: now,
-      items: [],
-      sync_status: "pending_sync",
-    };
-
-    // Enrich from current bill lines before clearBill() wipes them.
-    // Recompute money from lines so print never uses a stale cached total.
-    const printable = recomputeOrderMoney(enrichOrderForPrint(order));
-    localStorage.setItem(LAST_RECEIPT_KEY, JSON.stringify(printable));
-
-    if (effectiveStatus === "PENDING") {
-      qc.setQueryData<Order[]>(["orders", "pending"], (old) => {
-        const list = old || [];
-        const without = list.filter((o) => !ordersShareIdentity(o, printable));
-        return [printable, ...without];
-      });
-    } else {
-      qc.setQueryData<Order[]>(["orders", "pending"], (old) =>
-        (old || []).filter((o) => !ordersShareIdentity(o, printable)),
-      );
-    }
-
-    if (draftId) void deleteDraft(draftId);
-    bill.clearBill();
-    focusSearch();
-    // Persist locally before printing so a crash cannot leave a printed ticket
-    // with nothing in IndexedDB / sync queue.
     void (async () => {
       try {
+        const { allocateLocalDailyNumber, uniqueOrderCode } = await import(
+          "@/lib/daily-order-number"
+        );
+        const { shop } = await import("@/lib/shop");
+
+        const payload = buildPayload();
+        const editingOrderId = bill.editingOrderId;
+        const draftId = bill.draftId;
+        const orderType = bill.orderType;
+        const clientId = editingOrderId || crypto.randomUUID();
+        const now = new Date().toISOString();
+        const delivery = isWalkin ? 0 : bill.deliveryCharge;
+        const codFee = calcCodFee(
+          bill.paymentMethod,
+          settings?.cash_on_delivery_fee || 0,
+        );
+
+        const cached = editingOrderId
+          ? qc
+              .getQueryData<Order[]>(["orders", "pending"])
+              ?.find((o) => o.id === editingOrderId) ||
+            qc
+              .getQueryData<Order[]>(["orders"])
+              ?.find((o) => o.id === editingOrderId)
+          : undefined;
+
+        let businessDate = (cached?.business_date || "").trim();
+        let dailyNumber = Number(cached?.daily_number) || 0;
+        if (!editingOrderId && (!(dailyNumber > 0) || !businessDate)) {
+          const allocated = await allocateLocalDailyNumber(new Date());
+          businessDate = allocated.businessDate;
+          dailyNumber = allocated.dailyNumber;
+        } else if (editingOrderId && !(dailyNumber > 0)) {
+          // Legacy ticket without a daily token — keep blank, do not burn a new #.
+          businessDate = businessDate || "";
+          dailyNumber = 0;
+        }
+        const orderNumber =
+          cached?.order_number &&
+          (dailyNumber === 0 || dailyNumber === cached.daily_number)
+            ? cached.order_number
+            : dailyNumber > 0
+              ? uniqueOrderCode(
+                  shop.orderPrefix || "MC",
+                  businessDate,
+                  dailyNumber,
+                )
+              : cached?.order_number ||
+                `LOCAL-${clientId.slice(0, 8).toUpperCase()}`;
+
+        const oneClick =
+          status === "PENDING" && Boolean(settings?.pos_one_click_complete);
+        const editingCompleted =
+          Boolean(editingOrderId) && cached?.order_status === "COMPLETED";
+        let effectiveStatus: "COMPLETED" | "PENDING" = oneClick
+          ? "COMPLETED"
+          : status;
+        if (editingCompleted) effectiveStatus = "COMPLETED";
+
+        const order: Order = {
+          ...(cached || ({} as Order)),
+          id: clientId,
+          client_order_id: clientId,
+          order_number: orderNumber,
+          business_date: businessDate,
+          daily_number: dailyNumber,
+          order_type: orderType,
+          order_status: effectiveStatus,
+          customer_name: payload.customer_name,
+          phone: payload.phone,
+          address: payload.address,
+          location_id: payload.location_id,
+          payment_method: payload.payment_method,
+          order_notes: payload.order_notes,
+          subtotal: bill.subtotal,
+          discount: bill.discount,
+          delivery_charge: delivery,
+          cash_on_delivery_fee: cached?.cash_on_delivery_fee ?? codFee,
+          grand_total: calcGrandTotal(
+            bill.subtotal,
+            delivery,
+            cached?.cash_on_delivery_fee ?? codFee,
+            bill.discount,
+          ),
+          created_at: cached?.created_at || now,
+          updated_at: now,
+          items: [],
+          sync_status: "pending_sync",
+        };
+
+        const printable = recomputeOrderMoney(enrichOrderForPrint(order));
+        localStorage.setItem(LAST_RECEIPT_KEY, JSON.stringify(printable));
+
+        if (effectiveStatus === "PENDING") {
+          qc.setQueryData<Order[]>(["orders", "pending"], (old) => {
+            const list = old || [];
+            const without = list.filter(
+              (o) => !ordersShareIdentity(o, printable),
+            );
+            return [printable, ...without];
+          });
+        } else {
+          qc.setQueryData<Order[]>(["orders", "pending"], (old) =>
+            (old || []).filter((o) => !ordersShareIdentity(o, printable)),
+          );
+        }
+
+        if (draftId) void deleteDraft(draftId);
+        bill.clearBill();
+        focusSearch();
+
         if (editingOrderId) {
           await ordersApi.update(editingOrderId, {
             customer_name: payload.customer_name,
@@ -581,11 +608,21 @@ export default function NewOrderPage() {
             grand_total: printable.grand_total,
           });
           if (effectiveStatus === "COMPLETED") {
-            await ordersApi.complete(editingOrderId);
+            try {
+              await ordersApi.complete(editingOrderId);
+            } catch {
+              /* already completed is fine */
+            }
           }
         } else {
           const created = await ordersApi.create(
-            { ...payload, client_order_id: clientId },
+            {
+              ...payload,
+              client_order_id: clientId,
+              created_at: printable.created_at,
+              daily_number: dailyNumber,
+              business_date: businessDate,
+            },
             orderType,
           );
           if (effectiveStatus === "COMPLETED") {
@@ -593,8 +630,7 @@ export default function NewOrderPage() {
           }
         }
 
-        if (oneClick) {
-          // Kitchen first, then customer — print queue runs them in order.
+        if (oneClick || (editingCompleted && status === "PENDING")) {
           const kitchenPrint = await printKitchenReceipt(printable);
           const customerPrint = await printCustomerReceipt(
             { ...printable, order_status: "COMPLETED" },
@@ -602,31 +638,30 @@ export default function NewOrderPage() {
           );
           toast.success(
             !kitchenPrint || !customerPrint
-              ? "Order completed — allow popups if a receipt did not print"
+              ? "Order saved — allow popups if a receipt did not print"
               : "Order completed — kitchen & customer receipts printed",
           );
         } else if (effectiveStatus === "COMPLETED") {
-          void printCustomerReceipt(printable, settings || null).then(
-            (printed) => {
-              toast.success(
-                !printed
-                  ? "Order completed — allow popups to print customer receipt"
-                  : editingOrderId
-                    ? "Order updated & completed"
-                    : "Order completed & customer receipt printed",
-              );
-            },
+          const printed = await printCustomerReceipt(
+            printable,
+            settings || null,
+          );
+          toast.success(
+            !printed
+              ? "Order completed — allow popups to print customer receipt"
+              : editingOrderId
+                ? "Order updated & completed"
+                : "Order completed & customer receipt printed",
           );
         } else {
-          void printKitchenReceipt(printable).then((printed) => {
-            toast.success(
-              !printed
-                ? "Saved to Pending — allow popups to print kitchen receipt"
-                : editingOrderId
-                  ? "Pending updated — kitchen receipt printed"
-                  : "Saved to Pending — kitchen receipt printed",
-            );
-          });
+          const printed = await printKitchenReceipt(printable);
+          toast.success(
+            !printed
+              ? "Saved to Pending — allow popups to print kitchen receipt"
+              : editingOrderId
+                ? "Pending updated — kitchen receipt printed"
+                : "Saved to Pending — kitchen receipt printed",
+          );
         }
 
         void Promise.all([
@@ -636,8 +671,8 @@ export default function NewOrderPage() {
       } catch (err) {
         toast.error(
           err instanceof Error
-            ? `Save queued failed: ${err.message}`
-            : "Failed to save order in background",
+            ? `Save failed: ${err.message}`
+            : "Failed to save order",
         );
         void Promise.all([
           qc.invalidateQueries({ queryKey: ["orders"], exact: true }),

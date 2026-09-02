@@ -42,6 +42,7 @@ export default function RestaurantSettingsPage() {
           cashOnDeliveryFee: s.cash_on_delivery_fee ?? 0,
           drinkFlavors: parseDrinkFlavors(s.drink_flavors),
           posOneClickComplete: Boolean(s.pos_one_click_complete),
+          posAllowHistoryEdit: Boolean(s.pos_allow_history_edit),
         });
       })
       .catch((e) =>
@@ -88,6 +89,7 @@ export default function RestaurantSettingsPage() {
         cash_on_delivery_fee: Number(form.cashOnDeliveryFee || 0),
         drink_flavors: serializeDrinkFlavors(form.drinkFlavors),
         pos_one_click_complete: form.posOneClickComplete,
+        pos_allow_history_edit: form.posAllowHistoryEdit,
       });
       toast.success("Restaurant settings saved");
     } catch (e) {
@@ -245,6 +247,26 @@ export default function RestaurantSettingsPage() {
                 setForm({ ...form, posOneClickComplete: on })
               }
               aria-label="POS one-click complete"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-3 border-t border-zinc-800 pt-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <Label>Allow edit from Order History</Label>
+              <p className="mt-1 text-sm text-zinc-500">
+                When enabled, POS Order History shows an Edit button so staff can
+                reopen a past ticket (by daily number). Keep off unless you want
+                cashiers to change completed sales.
+              </p>
+            </div>
+            <Switch
+              checked={form.posAllowHistoryEdit}
+              onCheckedChange={(on) =>
+                setForm({ ...form, posAllowHistoryEdit: on })
+              }
+              aria-label="Allow edit from Order History"
             />
           </div>
         </div>
