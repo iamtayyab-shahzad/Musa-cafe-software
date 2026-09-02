@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -30,6 +30,7 @@ import { isOnline } from "@/lib/network";
 import { getSyncState } from "@/lib/sync-engine";
 import { ordersShareIdentity } from "@/lib/order-identity";
 import { isPizzaSizeLabel } from "@/lib/is-pizza";
+import { isDialogOpen, isTextEntryTarget } from "@/lib/pos-keyboard";
 import type { Order, OrderType, PaymentMethod } from "@/types";
 
 type FilterType = "all" | "website" | "phone" | "walkin";
@@ -68,6 +69,8 @@ export default function PendingOrdersPage() {
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<FilterType>("all");
   const [cancelTarget, setCancelTarget] = useState<Order | null>(null);
+  const [kbIndex, setKbIndex] = useState(0);
+  const listRef = useRef<HTMLDivElement | null>(null);
 
   const { data: settings } = useQuery({
     queryKey: ["settings"],
@@ -113,6 +116,22 @@ export default function PendingOrdersPage() {
         ),
     [orders, filter],
   );
+
+  useEffect(() => {
+    setKbIndex(filtered.length ? 0 : -1);
+  }, [filter, filtered.length]);
+
+  useEffect(() => {
+    if (kbIndex < 0) return;
+    const el = listRef.current?.querySelector(
+      `[data-kb-order-index="${kbIndex}"]`,
+    );
+    el?.scrollIntoView({ block: "nearest" });
+  }, [kbIndex]);
+
+  const reprintKitchenRef = useRef<(order: Order) => void>(() => {});
+  const completeRef = useRef<(order: Order) => void>(() => {});
+  const editRef = useRef<(order: Order) => void>(() => {});
 
   const counts = useMemo(() => {
     const website = orders.filter(
@@ -237,6 +256,52 @@ export default function PendingOrdersPage() {
     router.push("/orders/new");
   };
 
+  reprintKitchenRef.current = reprintKitchen;
+  completeRef.current = complete;
+  editRef.current = edit;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (isDialogOpen() || cancelTarget) return;
+      if (isTextEntryTarget(e.target)) return;
+
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (!filtered.length) return;
+        setKbIndex((i) => Math.min(filtered.length - 1, (i < 0 ? 0 : i) + 1));
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        if (!filtered.length) return;
+        setKbIndex((i) => Math.max(0, (i < 0 ? 0 : i) - 1));
+        return;
+      }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const order = filtered[kbIndex];
+        if (!order) return;
+        reprintKitchenRef.current(order);
+        return;
+      }
+      if (e.key === "c" || e.key === "C") {
+        e.preventDefault();
+        const order = filtered[kbIndex];
+        if (!order) return;
+        completeRef.current(order);
+        return;
+      }
+      if (e.key === "e" || e.key === "E") {
+        e.preventDefault();
+        const order = filtered[kbIndex];
+        if (!order) return;
+        editRef.current(order);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [cancelTarget, filtered, kbIndex]);
+
   return (
     <div className="h-full overflow-y-auto p-4 md:p-6">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
@@ -248,6 +313,11 @@ export default function PendingOrdersPage() {
             {dataUpdatedAt
               ? ` · Updated ${new Date(dataUpdatedAt).toLocaleTimeString()}`
               : ""}
+          </p>
+          <p className="mt-2 text-xs text-zinc-500">
+            <span className="font-semibold text-orange-400/90">Keyboard</span>
+            {" · "}↑↓ select · Enter kitchen print · C complete · E edit · F1
+            New Order
           </p>
         </div>
         <Button
@@ -285,19 +355,27 @@ export default function PendingOrdersPage() {
         ))}
       </div>
 
-      <div className="space-y-3">
-        {filtered.map((order) => {
+      <div ref={listRef} className="space-y-3">
+        {filtered.map((order, index) => {
           const items = order.items || [];
+          const focused = index === kbIndex;
           return (
             <div
               key={order.id}
+              data-kb-order-index={index}
+              onMouseEnter={() => setKbIndex(index)}
+              onClick={() => setKbIndex(index)}
               className={cn(
                 "rounded-xl border bg-zinc-950 p-4",
                 order.order_type === "website" || order.order_type === "guest"
                   ? "border-sky-500/50"
                   : "border-zinc-800",
+                focused && "pos-kb-focus",
               )}
             >
+              {focused ? (
+                <span className="pos-kb-focus-badge">Selected</span>
+              ) : null}
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0 flex-1 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">

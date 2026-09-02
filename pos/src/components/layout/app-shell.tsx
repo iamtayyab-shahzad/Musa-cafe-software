@@ -8,6 +8,7 @@ import { useMenuSearch } from "@/context/menu-search-context";
 import { TOKEN_KEY, isTokenExpired, isOfflineSessionValid } from "@/lib/utils";
 import { shop } from "@/lib/shop";
 import { isOnline } from "@/lib/network";
+import { isDialogOpen } from "@/lib/pos-keyboard";
 import {
   sessionRepo,
   settingsApi,
@@ -24,13 +25,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const queryClient = useQueryClient();
-  const { search, setSearch } = useMenuSearch();
+  const { search, setSearch, searchInputRef } = useMenuSearch();
   const [navOpen, setNavOpen] = useState(false);
   const isNewOrder = pathname.startsWith("/orders/new");
 
   useEffect(() => {
     if (!isNewOrder) setSearch("");
   }, [isNewOrder, setSearch]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "F1" && e.key !== "F3") return;
+      if (isDialogOpen()) return;
+      e.preventDefault();
+      if (e.key === "F1") router.push("/orders/new");
+      else router.push("/orders/pending");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [router]);
 
   const { data: settings } = useQuery({
     queryKey: ["settings"],
@@ -119,6 +132,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           restaurantName={settings?.restaurant_name || shop.name}
           search={isNewOrder ? search : undefined}
           onSearch={isNewOrder ? setSearch : undefined}
+          searchInputRef={isNewOrder ? searchInputRef : undefined}
           onMenuOpen={() => setNavOpen(true)}
         />
         <div className="min-h-0 flex-1 overflow-hidden">{children}</div>

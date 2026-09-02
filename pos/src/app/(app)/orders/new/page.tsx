@@ -1,7 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import dynamic from "next/dynamic";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -57,6 +64,12 @@ import {
   productsApi,
   settingsApi,
 } from "@/services/api";
+import {
+  countGridColumns,
+  isDialogOpen,
+  isTextEntryTarget,
+  moveGridIndex,
+} from "@/lib/pos-keyboard";
 import type { Customer, Order, OrderItem, Product, ProductSize } from "@/types";
 
 const DealFlavorDialog = dynamic(
@@ -88,7 +101,7 @@ const CancelOrderPasswordDialog = dynamic(
 export default function NewOrderPage() {
   const qc = useQueryClient();
   const bill = useBill();
-  const { search, setSearch } = useMenuSearch();
+  const { search, setSearch, focusSearch } = useMenuSearch();
   const [categoryId, setCategoryId] = useState("all");
   const [busy, setBusy] = useState(false);
   const [dealProduct, setDealProduct] = useState<Product | null>(null);
@@ -97,8 +110,24 @@ export default function NewOrderPage() {
   const [manualPriceProduct, setManualPriceProduct] = useState<Product | null>(
     null,
   );
+  /** Keyboard highlight index in the visible product grid (−1 = none). */
+  const [kbIndex, setKbIndex] = useState(0);
+  const gridRef = useRef<HTMLDivElement | null>(null);
+  const tableInputRef = useRef<HTMLInputElement | null>(null);
+  const kbIndexRef = useRef(0);
+  const placeOrderRef = useRef<(status: "COMPLETED" | "PENDING") => void>(
+    () => {},
+  );
   const isWalkin = bill.orderType === "walkin";
   const paymentOptions = paymentsForOrderType(bill.orderType);
+
+  useEffect(() => {
+    kbIndexRef.current = kbIndex;
+  }, [kbIndex]);
+
+  useEffect(() => {
+    focusSearch();
+  }, [focusSearch]);
 
   useEffect(() => {
     if (bill.cartRecovered && bill.items.length) {
@@ -177,6 +206,11 @@ export default function NewOrderPage() {
       })
       .sort((a, b) => a.display_order - b.display_order);
   }, [productsWithCategories, categoryId, search]);
+
+  // Reset highlight to first visible product when search/category changes.
+  useEffect(() => {
+    setKbIndex(filtered.length ? 0 : -1);
+  }, [search, categoryId, filtered.length]);
 
   const onProductClick = useCallback(
     (product: Product, size?: ProductSize) => {
@@ -388,7 +422,14 @@ export default function NewOrderPage() {
       toast.error("Select a valid payment method");
       return false;
     }
-    if (isWalkin) return true;
+    if (isWalkin) {
+      if (bill.serviceMode === "dine_in" && !bill.tableNumber.trim()) {
+        toast.error("Enter table number");
+        tableInputRef.current?.focus();
+        return false;
+      }
+      return true;
+    }
     if (!bill.customerName.trim() || !bill.phone.trim()) {
       toast.error("Customer name and phone required");
       return false;
@@ -485,6 +526,7 @@ export default function NewOrderPage() {
 
     if (draftId) void deleteDraft(draftId);
     bill.clearBill();
+    focusSearch();
     // Persist locally before printing so a crash cannot leave a printed ticket
     // with nothing in IndexedDB / sync queue.
     void (async () => {
@@ -566,6 +608,8 @@ export default function NewOrderPage() {
     toast.message("Bill cleared");
   };
 
+  placeOrderRef.current = placeOrder;
+
   const reprint = () => {
     try {
       const raw = localStorage.getItem(LAST_RECEIPT_KEY);
@@ -588,6 +632,155 @@ export default function NewOrderPage() {
       toast.error("Reprint failed");
     }
   };
+
+  const addHighlightedProduct = useCallback(() => {
+    const idx = kbIndexRef.current;
+    if (idx < 0 || idx >= filtered.length) {
+      toast.message("No product selected — press ↓ from search");
+      return;
+    }
+    const product = filtered[idx];
+    const sizes = isPizzaProduct(product)
+      ? pizzaSellableSizes(product.sizes)
+      : product.sizes || [];
+    onProductClick(product, sizes[0]);
+  }, [filtered, onProductClick]);
+
+  const focusTableOrSavePending = useCallback(() => {
+    if (busy) return;
+    if (!bill.items.length) {
+      toast.error("Cart is empty");
+      return;
+    }
+    if (isWalkin && bill.serviceMode === "dine_in") {
+      if (!bill.tableNumber.trim()) {
+        tableInputRef.current?.focus();
+        tableInputRef.current?.select();
+        toast.message("Type table number, then Enter to save");
+        return;
+      }
+    }
+    placeOrderRef.current("PENDING");
+  }, [busy, bill.items.length, bill.serviceMode, bill.tableNumber, isWalkin]);
+
+  // Scroll highlighted tile into view
+  useEffect(() => {
+    if (kbIndex < 0) return;
+    const el = gridRef.current?.querySelector(
+      `[data-kb-product-index="${kbIndex}"]`,
+    );
+    el?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [kbIndex]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (isDialogOpen()) return;
+      if (
+        dealProduct ||
+        drinkProduct ||
+        manualPriceProduct ||
+        cancelPasswordOpen
+      ) {
+        return;
+      }
+
+      const target = e.target as HTMLElement | null;
+      const inSearch = Boolean(
+        target?.closest?.("[data-pos-product-search='true']"),
+      );
+      const inTable = Boolean(
+        target?.closest?.("[data-pos-table-input='true']"),
+      );
+
+      // Table field: Enter saves pending
+      if (inTable && e.key === "Enter") {
+        e.preventDefault();
+        placeOrderRef.current("PENDING");
+        return;
+      }
+
+      // Slash focuses search (unless typing in another field)
+      if (
+        e.key === "/" &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey &&
+        !inSearch &&
+        !isTextEntryTarget(target)
+      ) {
+        e.preventDefault();
+        focusSearch();
+        return;
+      }
+
+      // F9 → table / save pending
+      if (e.key === "F9") {
+        e.preventDefault();
+        focusTableOrSavePending();
+        return;
+      }
+
+      // Ctrl+Enter → save pending
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        focusTableOrSavePending();
+        return;
+      }
+
+      // From search: ↓ enters grid, Enter adds highlighted
+      if (inSearch) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          if (!filtered.length) return;
+          setKbIndex(0);
+          (target as HTMLInputElement)?.blur();
+          return;
+        }
+        if (e.key === "Enter") {
+          e.preventDefault();
+          addHighlightedProduct();
+          return;
+        }
+        return;
+      }
+
+      // Don't steal keys from other inputs (phone, price, etc.)
+      if (isTextEntryTarget(target) && !inTable) return;
+
+      if (
+        e.key === "ArrowDown" ||
+        e.key === "ArrowUp" ||
+        e.key === "ArrowLeft" ||
+        e.key === "ArrowRight"
+      ) {
+        e.preventDefault();
+        if (!filtered.length) return;
+        const cols = countGridColumns(gridRef.current);
+        setKbIndex((prev) => {
+          const start = prev < 0 ? 0 : prev;
+          return moveGridIndex(start, e.key, filtered.length, cols);
+        });
+        return;
+      }
+
+      if (e.key === "Enter") {
+        e.preventDefault();
+        addHighlightedProduct();
+      }
+    };
+
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [
+    addHighlightedProduct,
+    cancelPasswordOpen,
+    dealProduct,
+    drinkProduct,
+    filtered.length,
+    focusSearch,
+    focusTableOrSavePending,
+    manualPriceProduct,
+  ]);
 
   return (
     <div className="grid h-full min-h-0 grid-cols-1 lg:grid-cols-[1fr_380px]">
@@ -614,6 +807,20 @@ export default function NewOrderPage() {
             No products cached. Connect to the internet once to sync the menu.
           </div>
         ) : null}
+        <div className="flex flex-wrap items-center gap-2 border-b border-zinc-800 px-3 py-2 text-xs text-zinc-500">
+          <span className="font-semibold text-orange-400/90">Keyboard</span>
+          <span>↑↓←→ move</span>
+          <span>·</span>
+          <span>Enter add</span>
+          <span>·</span>
+          <span>/ search</span>
+          <span>·</span>
+          <span>F9 table / save</span>
+          <span>·</span>
+          <span>Ctrl+Enter pending</span>
+          <span>·</span>
+          <span>F1 New · F3 Pending</span>
+        </div>
         <div className="flex flex-wrap gap-2 border-b border-zinc-800 p-3">
           <button
             type="button"
@@ -654,13 +861,19 @@ export default function NewOrderPage() {
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto p-3">
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
-            {filtered.map((product) => (
+          <div
+            ref={gridRef}
+            className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4"
+          >
+            {filtered.map((product, index) => (
               <MemoProductTile
                 key={product.id}
                 product={product}
                 currency={currency}
                 onAdd={onProductClick}
+                keyboardFocused={index === kbIndex}
+                kbIndex={index}
+                onKeyboardSelect={() => setKbIndex(index)}
               />
             ))}
           </div>
@@ -804,8 +1017,10 @@ export default function NewOrderPage() {
                 <div className="space-y-1">
                   <Label>Table Number</Label>
                   <Input
+                    ref={tableInputRef}
+                    data-pos-table-input="true"
                     value={bill.tableNumber}
-                    placeholder="e.g. 5"
+                    placeholder="e.g. 5 — then Enter to save"
                     onChange={(e) => bill.setTableNumber(e.target.value)}
                   />
                 </div>
@@ -1026,7 +1241,10 @@ export default function NewOrderPage() {
         products={productsWithCategories}
         categories={categories}
         onOpenChange={(open) => {
-          if (!open) setDealProduct(null);
+          if (!open) {
+            setDealProduct(null);
+            focusSearch();
+          }
         }}
         onConfirm={onDealConfirm}
       />
@@ -1035,7 +1253,10 @@ export default function NewOrderPage() {
         product={drinkProduct}
         flavorsRaw={settings?.drink_flavors}
         onOpenChange={(open) => {
-          if (!open) setDrinkProduct(null);
+          if (!open) {
+            setDrinkProduct(null);
+            focusSearch();
+          }
         }}
         onConfirm={onDrinkConfirm}
       />
@@ -1043,7 +1264,10 @@ export default function NewOrderPage() {
         open={Boolean(manualPriceProduct)}
         product={manualPriceProduct}
         onOpenChange={(open) => {
-          if (!open) setManualPriceProduct(null);
+          if (!open) {
+            setManualPriceProduct(null);
+            focusSearch();
+          }
         }}
         onConfirm={onManualPriceConfirm}
       />
@@ -1060,10 +1284,16 @@ function ProductTile({
   product,
   currency,
   onAdd,
+  keyboardFocused,
+  kbIndex,
+  onKeyboardSelect,
 }: {
   product: Product;
   currency: string;
   onAdd: (p: Product, size?: ProductSize) => void;
+  keyboardFocused?: boolean;
+  kbIndex?: number;
+  onKeyboardSelect?: () => void;
 }) {
   const sizes = isPizzaProduct(product)
     ? pizzaSellableSizes(product.sizes)
@@ -1074,10 +1304,23 @@ function ProductTile({
   const multiSize = isPizzaProduct(product) && sizes.length > 1;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950 text-left transition hover:border-orange-500">
+    <div
+      data-kb-product-index={kbIndex}
+      onMouseEnter={() => onKeyboardSelect?.()}
+      className={cn(
+        "relative overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950 text-left transition hover:border-orange-500",
+        keyboardFocused && "pos-kb-focus",
+      )}
+    >
+      {keyboardFocused ? (
+        <span className="pos-kb-focus-badge" aria-hidden>
+          Selected
+        </span>
+      ) : null}
       <button
         type="button"
         onClick={() => {
+          onKeyboardSelect?.();
           if (!multiSize) onAdd(product, sizes[0]);
         }}
         className={cn(
@@ -1130,6 +1373,7 @@ function ProductTile({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                onKeyboardSelect?.();
                 onAdd(product, s);
               }}
               className="min-h-11 rounded-md bg-zinc-900 px-1.5 py-2 text-center ring-1 ring-zinc-800 transition hover:bg-zinc-800 hover:ring-orange-500 active:bg-orange-500 active:text-black"

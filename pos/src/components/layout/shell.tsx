@@ -19,7 +19,7 @@ import {
   WifiOff,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type KeyboardEvent, type RefObject } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { ordersApi, sessionRepo } from "@/services/api";
@@ -229,11 +229,15 @@ export function TopBar({
   search,
   onSearch,
   onMenuOpen,
+  searchInputRef,
+  onSearchKeyDown,
 }: {
   restaurantName: string;
   search?: string;
   onSearch?: (v: string) => void;
   onMenuOpen?: () => void;
+  searchInputRef?: RefObject<HTMLInputElement | null>;
+  onSearchKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
 }) {
   const router = useRouter();
   const { theme, toggleTheme } = usePosTheme();
@@ -300,10 +304,14 @@ export function TopBar({
 
         {onSearch ? (
           <input
+            ref={searchInputRef}
+            data-pos-product-search="true"
             value={search}
             onChange={(e) => onSearch(e.target.value)}
-            placeholder="Search products..."
+            onKeyDown={onSearchKeyDown}
+            placeholder="Search products…  ↓ products · Enter add"
             className="h-11 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-4 text-base text-white placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-orange-500 lg:max-w-md"
+            autoComplete="off"
           />
         ) : null}
 

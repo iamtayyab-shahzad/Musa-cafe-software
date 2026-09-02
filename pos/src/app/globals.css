@@ -145,3 +145,63 @@ html[data-theme="light"] .phone-suggest-panel .row-active .meta-line {
   color: #c2410c;
 }
 
+/*
+ * Keyboard focus — must stay obvious in dark and light POS themes.
+ * Used on product tiles (New Order) and pending order cards.
+ */
+.pos-kb-focus {
+  position: relative;
+  z-index: 2;
+  border-color: #f97316 !important;
+  outline: 3px solid #fb923c;
+  outline-offset: 2px;
+  box-shadow:
+    0 0 0 4px rgb(249 115 22 / 0.45),
+    0 0 22px rgb(249 115 22 / 0.4);
+  background-color: rgb(249 115 22 / 0.12) !important;
+  transform: scale(1.02);
+  transition:
+    outline-color 80ms ease,
+    box-shadow 80ms ease,
+    transform 80ms ease,
+    background-color 80ms ease;
+}
+
+html[data-theme="light"] .pos-kb-focus {
+  border-color: #c2410c !important;
+  outline-color: #9a3412;
+  outline-width: 3px;
+  box-shadow:
+    0 0 0 5px rgb(194 65 12 / 0.4),
+    0 0 20px rgb(234 88 12 / 0.35);
+  background-color: #ffedd5 !important;
+}
+
+/* Beat light-theme bg-zinc remaps on focused tiles */
+html[data-theme="light"] .bg-zinc-950.pos-kb-focus,
+html[data-theme="light"] .pos-kb-focus.bg-zinc-950 {
+  background-color: #ffedd5 !important;
+}
+
+.pos-kb-focus-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 3;
+  border-radius: 999px;
+  background: #f97316;
+  color: #000;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  text-transform: uppercase;
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.35);
+}
+
+html[data-theme="light"] .pos-kb-focus-badge {
+  background: #ea580c;
+  color: #fff;
+}
+
