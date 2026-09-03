@@ -122,7 +122,12 @@ async function fetchProductsRemote(): Promise<Product[]> {
 async function fetchOrdersRemote(): Promise<Order[]> {
   const rows = await apiFetch<Order[]>("/orders?limit=200");
   await replaceOrdersPreservingUnsynced(rows);
-  return listLocalOrders();
+  const locals = await listLocalOrders();
+  const { seedDailyCountersFromOrders } = await import(
+    "@/lib/daily-order-number"
+  );
+  await seedDailyCountersFromOrders(locals);
+  return locals;
 }
 
 async function fetchPendingRemote(): Promise<Order[]> {
@@ -329,6 +334,10 @@ export const customersRepo = {
       async () => {
         const orders = await apiFetch<Order[]>("/orders?limit=200");
         await replaceOrdersPreservingUnsynced(orders);
+        const { seedDailyCountersFromOrders } = await import(
+          "@/lib/daily-order-number"
+        );
+        await seedDailyCountersFromOrders(orders);
         return listLocalCustomers();
       },
       listLocalCustomers,

@@ -1101,6 +1101,10 @@ export async function runSync(reason: string = "manual"): Promise<void> {
             } else {
               await replaceOrdersPreservingUnsynced(orders);
             }
+            const { seedDailyCountersFromOrders } = await import(
+              "@/lib/daily-order-number"
+            );
+            await seedDailyCountersFromOrders(await listLocalOrders());
           }
           if (Array.isArray(inventory)) {
             if (useSince) {

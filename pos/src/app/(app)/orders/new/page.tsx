@@ -55,7 +55,12 @@ import {
   encodeKitchenInstructions,
   encodeWalkinOrderNotes,
 } from "@/lib/receipt";
-import { allocateLocalDailyNumber, uniqueOrderCode } from "@/lib/daily-order-number";
+import {
+  allocateNextDailyNumber,
+  hydrateDailyNumberFromServer,
+  uniqueOrderCode,
+} from "@/lib/daily-order-number";
+import { karachiYmd } from "@/lib/local-sales";
 import { shop } from "@/lib/shop";
 import { activePromoInfo, weekendPromoLabel } from "@/lib/discount-rules";
 import { deleteDraft } from "@/lib/offline-db";
@@ -149,6 +154,10 @@ export default function NewOrderPage() {
   useEffect(() => {
     focusSearch();
   }, [focusSearch]);
+
+  useEffect(() => {
+    void hydrateDailyNumberFromServer(karachiYmd()).catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (bill.cartRecovered && bill.items.length) {
@@ -527,7 +536,7 @@ export default function NewOrderPage() {
         let businessDate = (cached?.business_date || "").trim();
         let dailyNumber = Number(cached?.daily_number) || 0;
         if (!editingOrderId && (!(dailyNumber > 0) || !businessDate)) {
-          const allocated = await allocateLocalDailyNumber(new Date());
+          const allocated = await allocateNextDailyNumber(new Date());
           businessDate = allocated.businessDate;
           dailyNumber = allocated.dailyNumber;
         } else if (editingOrderId && !(dailyNumber > 0)) {

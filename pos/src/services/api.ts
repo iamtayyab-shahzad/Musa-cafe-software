@@ -613,14 +613,14 @@ async function buildLocalOrder(
     cash_on_delivery_fee,
     discount,
   );
-  const { allocateLocalDailyNumber, uniqueOrderCode } = await import(
+  const { allocateNextDailyNumber, uniqueOrderCode } = await import(
     "@/lib/daily-order-number"
   );
   const { shop } = await import("@/lib/shop");
   let business_date = (input.business_date || "").trim();
   let daily_number = Number(input.daily_number) || 0;
   if (!(daily_number > 0) || !business_date) {
-    const allocated = await allocateLocalDailyNumber(
+    const allocated = await allocateNextDailyNumber(
       input.created_at ? new Date(input.created_at) : new Date(),
     );
     business_date = allocated.businessDate;

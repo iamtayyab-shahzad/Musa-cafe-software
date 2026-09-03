@@ -98,6 +98,15 @@ export default function LoginPage() {
       } catch {
         toast.warning("Logged in, but menu sync will retry on the next login.");
       }
+      try {
+        const { hydrateDailyNumberFromServer } = await import(
+          "@/lib/daily-order-number"
+        );
+        const { karachiYmd } = await import("@/lib/local-sales");
+        await hydrateDailyNumberFromServer(karachiYmd(), { force: true });
+      } catch {
+        /* counter will catch up from local tickets / next allocate */
+      }
       toast.success("Logged in");
       router.replace("/orders/new");
     } catch (err) {
