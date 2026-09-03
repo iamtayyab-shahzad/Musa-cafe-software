@@ -94,6 +94,7 @@ type UpdateSettingsRequest struct {
 	DefaultSiteTheme  *string `json:"default_site_theme" binding:"omitempty,oneof=dark dim light warm"`
 	PosOneClickComplete   *bool   `json:"pos_one_click_complete"`
 	PosAllowHistoryEdit   *bool   `json:"pos_allow_history_edit"`
+	ReceiptLayout         *string `json:"receipt_layout" binding:"omitempty,max=20000"`
 }
 
 type TokenResponse struct {

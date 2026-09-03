@@ -18,6 +18,7 @@ import {
 import { emptyRestaurantSettings, type RestaurantSettings } from "@/lib/types";
 import { settingsApi, type BackendSetting } from "@/services/api";
 import { Switch } from "@/components/ui/switch";
+import { ReceiptLayoutEditor } from "@/components/receipt-layout-editor";
 
 function mapSettings(s: BackendSetting): RestaurantSettings {
   return {
@@ -32,6 +33,7 @@ function mapSettings(s: BackendSetting): RestaurantSettings {
     drinkFlavors: parseDrinkFlavors(s.drink_flavors),
     posOneClickComplete: Boolean(s.pos_one_click_complete),
     posAllowHistoryEdit: Boolean(s.pos_allow_history_edit),
+    receiptLayout: s.receipt_layout || "",
   };
 }
 
@@ -100,6 +102,7 @@ export default function RestaurantSettingsPage() {
         drink_flavors: serializeDrinkFlavors(form.drinkFlavors),
         pos_one_click_complete: form.posOneClickComplete,
         pos_allow_history_edit: form.posAllowHistoryEdit,
+        receipt_layout: form.receiptLayout,
       });
       setForm(mapSettings(saved));
       setDirty(false);
@@ -169,7 +172,7 @@ export default function RestaurantSettingsPage() {
     <div>
       <PageHeader
         title="Restaurant Settings"
-        description="Core restaurant identity, hours, currency, COD fee, POS print mode, and drink flavors"
+        description="Core restaurant identity, hours, currency, COD fee, POS print mode, receipt layout, and drink flavors"
         action={
           <div className="flex items-center gap-3">
             {dirty ? (
@@ -184,7 +187,7 @@ export default function RestaurantSettingsPage() {
         }
       />
 
-      <Card className="mx-auto max-w-3xl space-y-4">
+      <Card className="mx-auto max-w-5xl space-y-4">
         <div className="space-y-2">
           <Label>Restaurant Name</Label>
           <Input
@@ -352,6 +355,16 @@ export default function RestaurantSettingsPage() {
             />
           </div>
         </div>
+
+        <ReceiptLayoutEditor
+          value={form.receiptLayout}
+          shopName={form.restaurantName}
+          phone={form.phone}
+          onChange={(receiptLayout) => {
+            setForm({ ...form, receiptLayout });
+            setDirty(true);
+          }}
+        />
 
         <div className="space-y-3 border-t border-zinc-800 pt-4">
           <div>

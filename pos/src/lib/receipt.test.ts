@@ -181,7 +181,7 @@ describe("kitchen ticket layout", () => {
     expect(customer).not.toContain("font-weight: 800");
     expect(customer).toContain("white-space: nowrap");
     // Date · time (and shop phone when settings present) on one meta line
-    expect(customer).toMatch(/class="meta">[\s\S]*? · /);
+    expect(customer).toMatch(/class="meta"[^>]*>[\s\S]*? · /);
   });
 
   it("prints daily order number on one line matching shop-name size", () => {

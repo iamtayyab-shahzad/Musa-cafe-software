@@ -192,7 +192,7 @@ export default function PendingOrdersPage() {
   };
 
   const reprintKitchen = (order: Order) => {
-    void printKitchenReceipt(printableOrder(order)).then((printed) => {
+    void printKitchenReceipt(printableOrder(order), settings || null).then((printed) => {
       toast.message(
         printed
           ? "Kitchen receipt sent to printer"

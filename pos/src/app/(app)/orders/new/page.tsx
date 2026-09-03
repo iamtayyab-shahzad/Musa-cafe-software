@@ -624,7 +624,7 @@ export default function NewOrderPage() {
             ? printOneClickReceipts(printable, settings || null)
             : effectiveStatus === "COMPLETED"
               ? printCustomerReceipt(printable, settings || null)
-              : printKitchenReceipt(printable);
+              : printKitchenReceipt(printable, settings || null);
 
         if (editingOrderId) {
           await ordersApi.update(editingOrderId, {

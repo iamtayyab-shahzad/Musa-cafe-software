@@ -170,6 +170,7 @@ export default function OrderHistoryPage() {
   const reprintKitchen = (order: Order) => {
     void printKitchenReceipt(
       ensureReceiptItemNames(order, productNameById),
+      settings || null,
     ).then((printed) => {
       toast.message(
         printed ? "Kitchen receipt reprinted" : "Allow popups to reprint",

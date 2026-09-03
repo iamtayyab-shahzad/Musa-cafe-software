@@ -154,6 +154,8 @@ export interface Settings extends BaseEntity {
    * When true, Order History shows Edit. Default false locks past tickets.
    */
   pos_allow_history_edit?: boolean;
+  /** JSON kitchen + customer thermal layout. Empty = built-in default. */
+  receipt_layout?: string;
 }
 
 export type PaymentMethod =

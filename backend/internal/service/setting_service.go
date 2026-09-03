@@ -172,6 +172,14 @@ func (s *SettingService) UpdateFromDTO(input dto.UpdateSettingsRequest) (*domain
 	if input.PosAllowHistoryEdit != nil {
 		boolPatch["pos_allow_history_edit"] = *input.PosAllowHistoryEdit
 	}
+	if input.ReceiptLayout != nil {
+		layout := strings.TrimSpace(*input.ReceiptLayout)
+		if len(layout) > 20000 {
+			return nil, utils.NewAppError(http.StatusBadRequest, "receipt layout is too large")
+		}
+		patch.ReceiptLayout = layout
+		cols = append(cols, "ReceiptLayout")
+	}
 	if len(cols) == 0 && len(boolPatch) == 0 {
 		return nil, utils.NewAppError(http.StatusBadRequest, "no fields to update")
 	}

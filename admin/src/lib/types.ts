@@ -86,6 +86,8 @@ export type RestaurantSettings = {
   posOneClickComplete: boolean;
   /** POS: allow Edit from Order History */
   posAllowHistoryEdit: boolean;
+  /** JSON thermal receipt layout; empty uses the current working default */
+  receiptLayout: string;
 };
 
 export type Customer = {
@@ -212,5 +214,6 @@ export function emptyRestaurantSettings(): RestaurantSettings {
     drinkFlavors: [],
     posOneClickComplete: false,
     posAllowHistoryEdit: false,
+    receiptLayout: "",
   };
 }

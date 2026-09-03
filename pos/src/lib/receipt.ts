@@ -5,6 +5,11 @@ import { isDealLineName } from "@/lib/discount-rules";
 import { isPizzaSizeLabel } from "@/lib/is-pizza";
 import { krunchiesProducts } from "@/data/krunchies";
 import { publicSiteHost, shop } from "@/lib/shop";
+import {
+  blockInlineStyle,
+  parseReceiptLayout,
+  type ReceiptBlock,
+} from "@/lib/receipt-layout";
 
 const bundledDescriptionByProductId = new Map(
   krunchiesProducts.map((p) => [p.id, p.description || ""]),
@@ -19,6 +24,10 @@ function escapeHtml(value: string) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+function styledBlock(block: ReceiptBlock, className: string, inner: string) {
+  return `<div class="${className}" style="${blockInlineStyle(block)}">${inner}</div>`;
 }
 
 function stripPrintScripts(html: string) {
@@ -404,7 +413,10 @@ function dealContentsHtml(item: OrderItem) {
     .join("")}</div>`;
 }
 
-export function buildKitchenReceiptHtml(order: Order) {
+export function buildKitchenReceiptHtml(
+  order: Order,
+  settings: Settings | null = null,
+) {
   const when = new Date(order.created_at || Date.now());
   const date = when.toLocaleDateString("en-GB", {
     day: "2-digit",
@@ -461,6 +473,107 @@ export function buildKitchenReceiptHtml(order: Order) {
       </tr>`;
     })
     .join("");
+
+  const shopTitle = escapeHtml(settings?.restaurant_name || shop.name);
+  const shopPhone = (settings?.phone || "").trim();
+  const table = parseTableNumber(order.order_notes);
+  const service = kitchenOrderTypeLabel(order.order_type, order.order_notes);
+  const layout = parseReceiptLayout(settings?.receipt_layout).kitchen;
+
+  const itemsTable = `<table>
+    <colgroup>
+      <col class="col-item" />
+      <col class="col-qty" />
+    </colgroup>
+    <thead>
+      <tr>
+        <td class="col-item">Item</td>
+        <td class="col-qty">Qty</td>
+      </tr>
+    </thead>
+    <tbody>
+      ${
+        itemsHtml ||
+        `<tr><td class="col-item" colspan="2">No items</td></tr>`
+      }
+    </tbody>
+  </table>`;
+
+  const kitchenBody = layout
+    .map((block) => {
+      if (!block.visible) return "";
+      switch (block.type) {
+        case "shop_name":
+          return styledBlock(block, "shop", shopTitle);
+        case "order_number":
+          return order.daily_number && order.daily_number > 0
+            ? styledBlock(
+                block,
+                "daily-big",
+                `Order #${order.daily_number}`,
+              )
+            : "";
+        case "table_service":
+          return table
+            ? styledBlock(
+                block,
+                "table-big",
+                `TABLE ${escapeHtml(table)}, ${escapeHtml(service)}`,
+              )
+            : styledBlock(block, "service-big", escapeHtml(service));
+        case "banner":
+          return styledBlock(
+            block,
+            "banner",
+            escapeHtml(block.text?.trim() || "* Kitchen Order Ticket *"),
+          );
+        case "datetime":
+          return styledBlock(
+            block,
+            "meta",
+            `<div>Bill Date : ${escapeHtml(date)} ${escapeHtml(time)}</div>`,
+          );
+        case "phone":
+          return shopPhone
+            ? styledBlock(block, "meta", escapeHtml(shopPhone))
+            : "";
+        case "customer":
+          return kitchenCustomerHtml
+            ? styledBlock(block, "meta", kitchenCustomerHtml)
+            : "";
+        case "items":
+          return `<div style="${blockInlineStyle(block)}">${itemsTable}</div>`;
+        case "item_count":
+          return styledBlock(
+            block,
+            "foot",
+            `<span>Items : ${itemCount}</span><span>Qty : ${qtyTotal}</span>`,
+          );
+        case "notes":
+          return orderNotes
+            ? styledBlock(
+                block,
+                "notes",
+                `Notes: ${escapeHtml(orderNotes)}`,
+              )
+            : "";
+        case "staff_notes":
+          return styledBlock(block, "write-space", "Staff notes:");
+        case "thank_you":
+          return styledBlock(
+            block,
+            "banner",
+            escapeHtml(block.text?.trim() || "Thank you!"),
+          );
+        case "custom_text":
+          return block.text?.trim()
+            ? styledBlock(block, "meta", escapeHtml(block.text.trim()))
+            : "";
+        default:
+          return "";
+      }
+    })
+    .join("\n  ");
 
   return `<!DOCTYPE html>
 <html>
@@ -601,57 +714,17 @@ export function buildKitchenReceiptHtml(order: Order) {
 </style>
 </head>
 <body>
-  <div class="shop">${escapeHtml(shop.name)}</div>
-  ${
-    order.daily_number && order.daily_number > 0
-      ? `<div class="daily-big">Order #${order.daily_number}</div>`
-      : ""
-  }
-  ${(() => {
-    const table = parseTableNumber(order.order_notes);
-    const service = kitchenOrderTypeLabel(order.order_type, order.order_notes);
-    if (table) {
-      return `<div class="table-big">TABLE ${escapeHtml(table)}, ${escapeHtml(service)}</div>`;
-    }
-    return `<div class="service-big">${escapeHtml(service)}</div>`;
-  })()}
-  <div class="banner">* Kitchen Order Ticket *</div>
-  <div class="meta">
-    <div>Bill Date : ${escapeHtml(date)} ${escapeHtml(time)}</div>
-    ${kitchenCustomerHtml}
-  </div>
-  <table>
-    <colgroup>
-      <col class="col-item" />
-      <col class="col-qty" />
-    </colgroup>
-    <thead>
-      <tr>
-        <td class="col-item">Item</td>
-        <td class="col-qty">Qty</td>
-      </tr>
-    </thead>
-    <tbody>
-      ${
-        itemsHtml ||
-        `<tr><td class="col-item" colspan="2">No items</td></tr>`
-      }
-    </tbody>
-  </table>
-  <div class="foot"><span>Items : ${itemCount}</span><span>Qty : ${qtyTotal}</span></div>
-  ${
-    orderNotes
-      ? `<div class="notes">Notes: ${escapeHtml(orderNotes)}</div>`
-      : ""
-  }
-  <div class="write-space">Staff notes:</div>
+  ${kitchenBody}
 </body>
 </html>`;
 }
 
-export function printKitchenReceipt(order: Order): Promise<boolean> {
+export function printKitchenReceipt(
+  order: Order,
+  settings: Settings | null = null,
+): Promise<boolean> {
   return openPrintWindow(
-    buildKitchenReceiptHtml(ensureReceiptItemNames(order)),
+    buildKitchenReceiptHtml(ensureReceiptItemNames(order), settings),
     `Kitchen ${order.order_number || order.id}`,
   );
 }
@@ -674,7 +747,7 @@ export function buildOneClickReceiptsHtml(
 ): string {
   const named = ensureReceiptItemNames(order);
   const completed = { ...named, order_status: "COMPLETED" as const };
-  const kitchen = buildKitchenReceiptHtml(named);
+  const kitchen = buildKitchenReceiptHtml(named, settings);
   const customer = buildCustomerReceiptHtml(completed, settings);
   const kitchenCss = extractHtmlPart(kitchen, "style");
   const customerCss = extractHtmlPart(customer, "style");
@@ -779,6 +852,120 @@ export function buildCustomerReceiptHtml(
       : "",
   ]
     .filter(Boolean)
+    .join("\n  ");
+
+  const shopPhone = (settings?.phone || "").trim();
+  const datePart = when.toLocaleDateString("en-PK");
+  const timePart = when.toLocaleTimeString("en-PK");
+  const tableNo = parseTableNumber(order.order_notes);
+  const customerLayout = parseReceiptLayout(settings?.receipt_layout).customer;
+
+  const itemsTable = `<hr />
+  <table>
+    <colgroup>
+      <col class="col-item" />
+      <col class="col-qty" />
+      <col class="col-amt" />
+    </colgroup>
+    <thead>
+      <tr>
+        <td class="col-item">Item</td>
+        <td class="col-qty">Qty</td>
+        <td class="col-amt">Amt</td>
+      </tr>
+    </thead>
+    <tbody>${lines}</tbody>
+  </table>`;
+
+  const totalsHtml = `<div class="total">
+    <div class="line"><span>Subtotal</span><span>${formatPrice(order.subtotal, currency)}</span></div>
+    ${delivery ? `<div class="line"><span>Delivery</span><span>${formatPrice(delivery, currency)}</span></div>` : ""}
+    ${cod ? `<div class="line"><span>COD Fee</span><span>${formatPrice(cod, currency)}</span></div>` : ""}
+    ${discount ? `<div class="line"><span>Discount</span><span>-${formatPrice(discount, currency)}</span></div>` : ""}
+    ${tax ? `<div class="line"><span>Tax</span><span>${formatPrice(tax, currency)}</span></div>` : ""}
+    <div class="line grand"><span>TOTAL</span><span>${formatPrice(order.grand_total, currency)}</span></div>
+  </div>`;
+
+  const customerBody = customerLayout
+    .map((block) => {
+      if (!block.visible) return "";
+      switch (block.type) {
+        case "shop_name":
+          return `<h1 style="${blockInlineStyle(block)}">${escapeHtml(settings?.restaurant_name || shop.name)}</h1>`;
+        case "order_number":
+          return order.daily_number && order.daily_number > 0
+            ? styledBlock(block, "daily-line", `Order #${order.daily_number}`)
+            : "";
+        case "table":
+          return tableNo
+            ? styledBlock(
+                block,
+                "table-line",
+                `TABLE ${escapeHtml(tableNo)}`,
+              )
+            : "";
+        case "phone_datetime": {
+          const meta = [shopPhone, datePart, timePart]
+            .filter(Boolean)
+            .map((part) => escapeHtml(part))
+            .join(" · ");
+          return styledBlock(
+            block,
+            "meta",
+            `${meta}${reprint ? `<div class="reprint">REPRINT</div>` : ""}`,
+          );
+        }
+        case "phone":
+          return shopPhone
+            ? styledBlock(block, "meta", escapeHtml(shopPhone))
+            : "";
+        case "datetime":
+          return styledBlock(
+            block,
+            "meta",
+            `${escapeHtml(datePart)} · ${escapeHtml(timePart)}${reprint ? `<div class="reprint">REPRINT</div>` : ""}`,
+          );
+        case "customer":
+          return customerInfoHtml
+            ? `<div style="${blockInlineStyle(block)}">${customerInfoHtml}</div>`
+            : "";
+        case "payment":
+          return styledBlock(
+            block,
+            "info",
+            `Payment: ${escapeHtml((order.payment_method || "").toUpperCase())}`,
+          );
+        case "items":
+          return `<div style="${blockInlineStyle(block)}">${itemsTable}</div>`;
+        case "totals":
+          return `<div style="${blockInlineStyle(block)}">${totalsHtml}</div>`;
+        case "notes":
+          return notes
+            ? styledBlock(block, "notes", `Notes: ${escapeHtml(notes)}`)
+            : "";
+        case "thank_you":
+          return styledBlock(
+            block,
+            "center",
+            escapeHtml(block.text?.trim() || "Thank you!"),
+          );
+        case "website_qr":
+          return siteHost
+            ? `<div class="web" style="${blockInlineStyle(block)}">
+    ${WEBSITE_QR_SVG}
+    <p>Order online &amp; skip the queue<br/>${escapeHtml(siteHost)}</p>
+  </div>`
+            : "";
+        case "staff_notes":
+          return styledBlock(block, "write-space", "Staff notes:");
+        case "custom_text":
+          return block.text?.trim()
+            ? styledBlock(block, "center", escapeHtml(block.text.trim()))
+            : "";
+        default:
+          return "";
+      }
+    })
     .join("\n  ");
 
   return `<!DOCTYPE html>
@@ -979,61 +1166,7 @@ export function buildCustomerReceiptHtml(
 </style>
 </head>
 <body>
-  <h1>${escapeHtml(settings?.restaurant_name || shop.name)}</h1>
-  ${
-    order.daily_number && order.daily_number > 0
-      ? `<div class="daily-line">Order #${order.daily_number}</div>`
-      : ""
-  }
-  ${
-    parseTableNumber(order.order_notes)
-      ? `<div class="table-line">TABLE ${escapeHtml(parseTableNumber(order.order_notes))}</div>`
-      : ""
-  }
-  <div class="meta">
-    ${[
-      settings?.phone?.trim() || "",
-      when.toLocaleDateString("en-PK"),
-      when.toLocaleTimeString("en-PK"),
-    ]
-      .filter(Boolean)
-      .map((part) => escapeHtml(part))
-      .join(" · ")}
-    ${reprint ? `<div class="reprint">REPRINT</div>` : ""}
-  </div>
-  ${customerInfoHtml}
-  <div class="info">Payment: ${escapeHtml((order.payment_method || "").toUpperCase())}</div>
-  <hr />
-  <table>
-    <colgroup>
-      <col class="col-item" />
-      <col class="col-qty" />
-      <col class="col-amt" />
-    </colgroup>
-    <thead>
-      <tr>
-        <td class="col-item">Item</td>
-        <td class="col-qty">Qty</td>
-        <td class="col-amt">Amt</td>
-      </tr>
-    </thead>
-    <tbody>${lines}</tbody>
-  </table>
-  <div class="total">
-    <div class="line"><span>Subtotal</span><span>${formatPrice(order.subtotal, currency)}</span></div>
-    ${delivery ? `<div class="line"><span>Delivery</span><span>${formatPrice(delivery, currency)}</span></div>` : ""}
-    ${cod ? `<div class="line"><span>COD Fee</span><span>${formatPrice(cod, currency)}</span></div>` : ""}
-    ${discount ? `<div class="line"><span>Discount</span><span>-${formatPrice(discount, currency)}</span></div>` : ""}
-    ${tax ? `<div class="line"><span>Tax</span><span>${formatPrice(tax, currency)}</span></div>` : ""}
-    <div class="line grand"><span>TOTAL</span><span>${formatPrice(order.grand_total, currency)}</span></div>
-  </div>
-  ${notes ? `<p class="notes">Notes: ${escapeHtml(notes)}</p>` : ""}
-  <p class="center">Thank you!</p>
-  ${siteHost ? `<div class="web">
-    ${WEBSITE_QR_SVG}
-    <p>Order online &amp; skip the queue<br/>${escapeHtml(siteHost)}</p>
-  </div>` : ""}
-  <div class="write-space">Staff notes:</div>
+  ${customerBody}
 </body>
 </html>`;
 }

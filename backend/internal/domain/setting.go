@@ -27,4 +27,7 @@ type Setting struct {
 	// PosAllowHistoryEdit: when true, POS Order History shows Edit for past
 	// tickets. Default false so completed sales stay locked unless enabled.
 	PosAllowHistoryEdit bool `gorm:"not null;default:false" json:"pos_allow_history_edit"`
+	// ReceiptLayout is JSON for kitchen + customer thermal block layout.
+	// Empty means POS uses the built-in default (current working print).
+	ReceiptLayout string `gorm:"type:text" json:"receipt_layout"`
 }

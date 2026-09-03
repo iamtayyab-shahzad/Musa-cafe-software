@@ -75,6 +75,7 @@ export type BackendSetting = {
   default_site_theme?: string;
   pos_one_click_complete?: boolean;
   pos_allow_history_edit?: boolean;
+  receipt_layout?: string;
 };
 
 type BackendInventory = {
@@ -516,6 +517,7 @@ export type SettingsUpdatePayload = {
   default_site_theme?: string;
   pos_one_click_complete?: boolean;
   pos_allow_history_edit?: boolean;
+  receipt_layout?: string;
 };
 
 export const settingsApi = {
