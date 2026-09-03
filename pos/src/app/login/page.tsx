@@ -11,7 +11,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { setToken } from "@/lib/api-client";
 import { TOKEN_KEY, isTokenExpired, isOfflineSessionValid } from "@/lib/utils";
-import { isOnline } from "@/lib/network";
+import { isOnline, clearForcedOffline } from "@/lib/network";
 import { authApi, sessionRepo, syncKrunchiesMenu } from "@/services/api";
 import { shop } from "@/lib/shop";
 import { useEffect, useState } from "react";
@@ -81,6 +81,7 @@ export default function LoginPage() {
   };
 
   const onSubmit = async (values: FormValues) => {
+    clearForcedOffline();
     if (!isOnline()) {
       if (canContinueOffline) {
         await continueOffline();
