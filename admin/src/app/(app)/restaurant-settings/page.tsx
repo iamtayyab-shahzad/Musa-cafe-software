@@ -16,14 +16,34 @@ import {
   prepareProductImage,
 } from "@/lib/image-upload";
 import { emptyRestaurantSettings, type RestaurantSettings } from "@/lib/types";
-import { settingsApi } from "@/services/api";
+import { settingsApi, type BackendSetting } from "@/services/api";
 import { Switch } from "@/components/ui/switch";
+
+function mapSettings(s: BackendSetting): RestaurantSettings {
+  return {
+    restaurantName: s.restaurant_name || "",
+    logo: s.logo || "",
+    phone: s.phone || "",
+    whatsapp: s.whatsapp || "",
+    openingHours: s.opening_time || "",
+    closingHours: s.closing_time || "",
+    currency: s.currency || "Rs",
+    cashOnDeliveryFee: s.cash_on_delivery_fee ?? 0,
+    drinkFlavors: parseDrinkFlavors(s.drink_flavors),
+    posOneClickComplete: Boolean(s.pos_one_click_complete),
+    posAllowHistoryEdit: Boolean(s.pos_allow_history_edit),
+  };
+}
 
 export default function RestaurantSettingsPage() {
   const [form, setForm] = useState<RestaurantSettings>(emptyRestaurantSettings);
   const [newFlavor, setNewFlavor] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [toggling, setToggling] = useState<
+    null | "posOneClickComplete" | "posAllowHistoryEdit"
+  >(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -31,19 +51,8 @@ export default function RestaurantSettingsPage() {
       .get()
       .then((s) => {
         if (cancelled) return;
-        setForm({
-          restaurantName: s.restaurant_name || "",
-          logo: s.logo || "",
-          phone: s.phone || "",
-          whatsapp: s.whatsapp || "",
-          openingHours: s.opening_time || "",
-          closingHours: s.closing_time || "",
-          currency: s.currency || "Rs",
-          cashOnDeliveryFee: s.cash_on_delivery_fee ?? 0,
-          drinkFlavors: parseDrinkFlavors(s.drink_flavors),
-          posOneClickComplete: Boolean(s.pos_one_click_complete),
-          posAllowHistoryEdit: Boolean(s.pos_allow_history_edit),
-        });
+        setForm(mapSettings(s));
+        setDirty(false);
       })
       .catch((e) =>
         toast.error(
@@ -67,6 +76,7 @@ export default function RestaurantSettingsPage() {
     }
     setForm({ ...form, drinkFlavors: [...form.drinkFlavors, name] });
     setNewFlavor("");
+    setDirty(true);
   };
 
   const save = async () => {
@@ -78,7 +88,7 @@ export default function RestaurantSettingsPage() {
     }
     setSaving(true);
     try {
-      await settingsApi.update({
+      const saved = await settingsApi.update({
         restaurant_name: form.restaurantName,
         phone: form.phone,
         whatsapp: form.whatsapp,
@@ -91,6 +101,8 @@ export default function RestaurantSettingsPage() {
         pos_one_click_complete: form.posOneClickComplete,
         pos_allow_history_edit: form.posAllowHistoryEdit,
       });
+      setForm(mapSettings(saved));
+      setDirty(false);
       toast.success("Restaurant settings saved");
     } catch (e) {
       toast.error(
@@ -98,6 +110,50 @@ export default function RestaurantSettingsPage() {
       );
     } finally {
       setSaving(false);
+    }
+  };
+
+  /** POS toggles save immediately so refresh does not wipe them. */
+  const savePosToggle = async (
+    field: "posOneClickComplete" | "posAllowHistoryEdit",
+    value: boolean,
+  ) => {
+    const previous = form[field];
+    const nextForm = { ...form, [field]: value };
+    setForm(nextForm);
+    setToggling(field);
+    try {
+      const saved = await settingsApi.update({
+        pos_one_click_complete:
+          field === "posOneClickComplete"
+            ? value
+            : nextForm.posOneClickComplete,
+        pos_allow_history_edit:
+          field === "posAllowHistoryEdit"
+            ? value
+            : nextForm.posAllowHistoryEdit,
+      });
+      setForm((current) => ({
+        ...current,
+        posOneClickComplete: Boolean(saved.pos_one_click_complete),
+        posAllowHistoryEdit: Boolean(saved.pos_allow_history_edit),
+      }));
+      toast.success(
+        field === "posOneClickComplete"
+          ? value
+            ? "One-click print enabled"
+            : "One-click print disabled"
+          : value
+            ? "Order history edit enabled"
+            : "Order history edit disabled",
+      );
+    } catch (e) {
+      setForm((current) => ({ ...current, [field]: previous }));
+      toast.error(
+        e instanceof Error ? e.message : "Failed to save POS setting",
+      );
+    } finally {
+      setToggling(null);
     }
   };
 
@@ -115,9 +171,16 @@ export default function RestaurantSettingsPage() {
         title="Restaurant Settings"
         description="Core restaurant identity, hours, currency, COD fee, POS print mode, and drink flavors"
         action={
-          <Button onClick={save} disabled={saving}>
-            {saving ? "Saving..." : "Save Settings"}
-          </Button>
+          <div className="flex items-center gap-3">
+            {dirty ? (
+              <span className="text-xs font-medium text-amber-400">
+                Unsaved changes
+              </span>
+            ) : null}
+            <Button onClick={save} disabled={saving || !dirty}>
+              {saving ? "Saving..." : "Save Settings"}
+            </Button>
+          </div>
         }
       />
 
@@ -126,16 +189,20 @@ export default function RestaurantSettingsPage() {
           <Label>Restaurant Name</Label>
           <Input
             value={form.restaurantName}
-            onChange={(e) =>
-              setForm({ ...form, restaurantName: e.target.value })
-            }
+            onChange={(e) => {
+              setForm({ ...form, restaurantName: e.target.value });
+              setDirty(true);
+            }}
           />
         </div>
         <div className="space-y-2">
           <Label>Logo URL</Label>
           <Input
             value={form.logo}
-            onChange={(e) => setForm({ ...form, logo: e.target.value })}
+            onChange={(e) => {
+              setForm({ ...form, logo: e.target.value });
+              setDirty(true);
+            }}
             placeholder="https://... or upload below"
           />
           <Input
@@ -150,6 +217,7 @@ export default function RestaurantSettingsPage() {
                   toast.message("Uploading logo…");
                   const prepared = await prepareProductImage(file);
                   setForm((f) => ({ ...f, logo: prepared.url }));
+                  setDirty(true);
                   toast.success(
                     `Logo ready (~${Math.round(prepared.bytesApprox / 1024)}KB)`,
                   );
@@ -176,14 +244,20 @@ export default function RestaurantSettingsPage() {
             <Label>Phone</Label>
             <Input
               value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              onChange={(e) => {
+                setForm({ ...form, phone: e.target.value });
+                setDirty(true);
+              }}
             />
           </div>
           <div className="space-y-2">
             <Label>WhatsApp</Label>
             <Input
               value={form.whatsapp}
-              onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
+              onChange={(e) => {
+                setForm({ ...form, whatsapp: e.target.value });
+                setDirty(true);
+              }}
             />
           </div>
         </div>
@@ -192,18 +266,20 @@ export default function RestaurantSettingsPage() {
             <Label>Opening Hours</Label>
             <Input
               value={form.openingHours}
-              onChange={(e) =>
-                setForm({ ...form, openingHours: e.target.value })
-              }
+              onChange={(e) => {
+                setForm({ ...form, openingHours: e.target.value });
+                setDirty(true);
+              }}
             />
           </div>
           <div className="space-y-2">
             <Label>Closing Hours</Label>
             <Input
               value={form.closingHours}
-              onChange={(e) =>
-                setForm({ ...form, closingHours: e.target.value })
-              }
+              onChange={(e) => {
+                setForm({ ...form, closingHours: e.target.value });
+                setDirty(true);
+              }}
             />
           </div>
         </div>
@@ -212,7 +288,10 @@ export default function RestaurantSettingsPage() {
             <Label>Currency</Label>
             <Input
               value={form.currency}
-              onChange={(e) => setForm({ ...form, currency: e.target.value })}
+              onChange={(e) => {
+                setForm({ ...form, currency: e.target.value });
+                setDirty(true);
+              }}
             />
           </div>
           <div className="space-y-2">
@@ -220,12 +299,13 @@ export default function RestaurantSettingsPage() {
             <Input
               type="number"
               value={form.cashOnDeliveryFee}
-              onChange={(e) =>
+              onChange={(e) => {
                 setForm({
                   ...form,
                   cashOnDeliveryFee: Number(e.target.value),
-                })
-              }
+                });
+                setDirty(true);
+              }}
             />
           </div>
         </div>
@@ -238,13 +318,14 @@ export default function RestaurantSettingsPage() {
                 When enabled, cashier Save Pending / Enter prints the kitchen
                 ticket and the customer receipt together, and marks the order
                 completed. When off, the normal pending → complete flow is
-                unchanged.
+                unchanged. Saves immediately.
               </p>
             </div>
             <Switch
               checked={form.posOneClickComplete}
+              disabled={toggling !== null}
               onCheckedChange={(on) =>
-                setForm({ ...form, posOneClickComplete: on })
+                void savePosToggle("posOneClickComplete", on)
               }
               aria-label="POS one-click complete"
             />
@@ -258,13 +339,14 @@ export default function RestaurantSettingsPage() {
               <p className="mt-1 text-sm text-zinc-500">
                 When enabled, POS Order History shows an Edit button so staff can
                 reopen a past ticket (by daily number). Keep off unless you want
-                cashiers to change completed sales.
+                cashiers to change completed sales. Saves immediately.
               </p>
             </div>
             <Switch
               checked={form.posAllowHistoryEdit}
+              disabled={toggling !== null}
               onCheckedChange={(on) =>
-                setForm({ ...form, posAllowHistoryEdit: on })
+                void savePosToggle("posAllowHistoryEdit", on)
               }
               aria-label="Allow edit from Order History"
             />
@@ -289,12 +371,13 @@ export default function RestaurantSettingsPage() {
                 <button
                   type="button"
                   className="text-red-400 hover:text-red-300"
-                  onClick={() =>
+                  onClick={() => {
                     setForm({
                       ...form,
                       drinkFlavors: form.drinkFlavors.filter((f) => f !== flavor),
-                    })
-                  }
+                    });
+                    setDirty(true);
+                  }}
                 >
                   ×
                 </button>

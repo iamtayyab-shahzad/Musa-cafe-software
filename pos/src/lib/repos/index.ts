@@ -299,16 +299,22 @@ const emptySettings = (): Settings => ({
 
 export const settingsRepo = {
   async get(): Promise<Settings> {
-    return localFirst(
-      "settings",
-      () => apiFetch<Settings>("/settings/public"),
-      getLocalSettings,
-      async (data) => {
+    // Settings must reflect admin changes immediately. Prefer the live API
+    // when online; IndexedDB is only a fallback for offline POS.
+    if (isOnline()) {
+      try {
+        const data = await apiFetch<Settings>("/settings/public");
         if (data) await saveLocalSettings(data);
-      },
-      emptySettings(),
-      ["settings"],
-    );
+        return data;
+      } catch {
+        const local = await getLocalSettings();
+        if (local) return local;
+        return emptySettings();
+      }
+    }
+
+    const local = await getLocalSettings();
+    return local || emptySettings();
   },
 };
 

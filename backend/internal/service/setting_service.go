@@ -163,20 +163,28 @@ func (s *SettingService) UpdateFromDTO(input dto.UpdateSettingsRequest) (*domain
 			return nil, utils.NewAppError(http.StatusBadRequest, "invalid default_site_theme")
 		}
 	}
+	// Bool flags use a map so GORM always persists true AND false.
+	// Struct Updates can skip zero-values even with Select in some paths.
+	boolPatch := map[string]any{}
 	if input.PosOneClickComplete != nil {
-		patch.PosOneClickComplete = *input.PosOneClickComplete
-		cols = append(cols, "PosOneClickComplete")
+		boolPatch["pos_one_click_complete"] = *input.PosOneClickComplete
 	}
 	if input.PosAllowHistoryEdit != nil {
-		patch.PosAllowHistoryEdit = *input.PosAllowHistoryEdit
-		cols = append(cols, "PosAllowHistoryEdit")
+		boolPatch["pos_allow_history_edit"] = *input.PosAllowHistoryEdit
 	}
-	if len(cols) == 0 {
+	if len(cols) == 0 && len(boolPatch) == 0 {
 		return nil, utils.NewAppError(http.StatusBadRequest, "no fields to update")
 	}
 
-	if err := s.db.Model(current).Select(cols).Updates(patch).Error; err != nil {
-		return nil, err
+	if len(cols) > 0 {
+		if err := s.db.Model(current).Select(cols).Updates(patch).Error; err != nil {
+			return nil, err
+		}
+	}
+	if len(boolPatch) > 0 {
+		if err := s.db.Model(current).Updates(boolPatch).Error; err != nil {
+			return nil, err
+		}
 	}
 	s.invalidateCache()
 	return s.Get()

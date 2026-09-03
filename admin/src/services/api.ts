@@ -56,7 +56,7 @@ type BackendLocation = {
   delivery_charge: number;
 };
 
-type BackendSetting = {
+export type BackendSetting = {
   id: string;
   restaurant_name: string;
   phone: string;
