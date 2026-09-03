@@ -530,7 +530,7 @@ export function buildKitchenReceiptHtml(order: Order) {
     font-size: 13px;
   }
   .col-qty { text-align: right; }
-  .name { word-break: break-word; }
+  .name { white-space: nowrap; overflow: hidden; text-overflow: clip; }
   .size {
     font-weight: 400;
     font-size: 12px;
@@ -607,12 +607,14 @@ export function buildKitchenReceiptHtml(order: Order) {
       ? `<div class="daily-big">Order #${order.daily_number}</div>`
       : ""
   }
-  ${
-    parseTableNumber(order.order_notes)
-      ? `<div class="table-big">TABLE ${escapeHtml(parseTableNumber(order.order_notes))}</div>`
-      : ""
-  }
-  <div class="service-big">${escapeHtml(kitchenOrderTypeLabel(order.order_type, order.order_notes))}</div>
+  ${(() => {
+    const table = parseTableNumber(order.order_notes);
+    const service = kitchenOrderTypeLabel(order.order_type, order.order_notes);
+    if (table) {
+      return `<div class="table-big">TABLE ${escapeHtml(table)}, ${escapeHtml(service)}</div>`;
+    }
+    return `<div class="service-big">${escapeHtml(service)}</div>`;
+  })()}
   <div class="banner">* Kitchen Order Ticket *</div>
   <div class="meta">
     <div>Bill Date : ${escapeHtml(date)} ${escapeHtml(time)}</div>
@@ -734,10 +736,11 @@ export function buildCustomerReceiptHtml(
         ? `<div class="note">${escapeHtml(extras)}</div>`
         : "";
       const included = dealContentsHtml(item);
+      const title = size ? `${name} (${size})` : name;
       return `
       <tr>
         <td class="col-item">
-          ${escapeHtml(name)}${size ? ` (${escapeHtml(size)})` : ""}
+          <div class="name">${escapeHtml(title)}</div>
           ${included}
           ${noteHtml}
         </td>
@@ -805,10 +808,10 @@ export function buildCustomerReceiptHtml(
     print-color-adjust: exact;
   }
   h1 {
-    font-size: 18px;
-    font-weight: 800;
+    font-size: 15px;
+    font-weight: 600;
     text-align: center;
-    margin: 0 0 2px;
+    margin: 0 0 4px;
     letter-spacing: 0.4px;
     text-transform: uppercase;
   }
@@ -841,12 +844,12 @@ export function buildCustomerReceiptHtml(
     font-size: 13px;
   }
   col.col-item { width: auto; }
-  col.col-qty { width: 7mm; }
-  /* Wide enough for "Rs 9,999" without spilling into the clip zone */
-  col.col-amt { width: 24mm; }
+  col.col-qty { width: 8mm; }
+  /* Keep Amt readable but leave room so item names stay on one line. */
+  col.col-amt { width: 18mm; }
   thead td {
     font-weight: 600;
-    font-size: 11px;
+    font-size: 12px;
     border-bottom: 1px solid #000;
     padding: 3px 1px 4px 0;
   }
@@ -857,9 +860,14 @@ export function buildCustomerReceiptHtml(
     border-bottom: 1px dashed #999;
   }
   .col-item {
-    word-wrap: break-word;
-    overflow-wrap: anywhere;
     padding-right: 2px !important;
+  }
+  .name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+    font-weight: 400;
+    font-size: 13px;
   }
   .col-qty {
     text-align: center;
@@ -896,7 +904,7 @@ export function buildCustomerReceiptHtml(
     font-variant-numeric: tabular-nums;
   }
   .grand {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     margin-top: 4px;
     padding-top: 3px;
@@ -948,7 +956,7 @@ export function buildCustomerReceiptHtml(
   }
   .table-line {
     text-align: center;
-    font-size: 18px;
+    font-size: 15px;
     font-weight: 700;
     line-height: 1.2;
     letter-spacing: 0.4px;
@@ -959,7 +967,7 @@ export function buildCustomerReceiptHtml(
   }
   .daily-line {
     text-align: center;
-    font-size: 18px;
+    font-size: 15px;
     font-weight: 700;
     line-height: 1.2;
     letter-spacing: 0.4px;

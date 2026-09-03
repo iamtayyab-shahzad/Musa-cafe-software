@@ -164,10 +164,10 @@ describe("kitchen ticket layout", () => {
     );
     const kitchen = buildKitchenReceiptHtml(order);
     const customer = buildCustomerReceiptHtml(order, null);
-    expect(kitchen).toContain("TABLE 7");
-    expect(kitchen).toContain("Dine In");
+    expect(kitchen).toContain("TABLE 7, Dine In");
     expect(kitchen).not.toContain("Ticket No");
     expect(kitchen).not.toContain("Walk-in Customer");
+    expect(kitchen).not.toMatch(/table-big">TABLE 7<\/div>[\s\S]*?service-big/);
     expect(customer).toContain("TABLE 7");
     expect(customer).toContain("table-line");
     expect(customer).not.toContain("table-big");
@@ -177,6 +177,9 @@ describe("kitchen ticket layout", () => {
     expect(customer).not.toContain("Phone: 0000000000");
     expect(customer).not.toContain("Address: In Store");
     expect(customer).toContain("Musa Cafe");
+    expect(customer).toContain("font-weight: 600");
+    expect(customer).not.toContain("font-weight: 800");
+    expect(customer).toContain("white-space: nowrap");
     // Date · time (and shop phone when settings present) on one meta line
     expect(customer).toMatch(/class="meta">[\s\S]*? · /);
   });
@@ -365,7 +368,8 @@ describe("kitchen ticket layout", () => {
     expect(customer).not.toContain("www.krunchies.pk");
     expect(customer).toContain("Musa Cafe");
     expect(customer).toContain("Staff notes:");
-    expect(customer).toContain("font-weight: 800"); // shop name
+    expect(customer).toContain("font-weight: 600"); // shop name matches kitchen
+    expect(customer).not.toContain("font-weight: 800");
     expect(customer).not.toContain("Order:");
     expect(customer).not.toContain("Walk-in Customer");
   });
