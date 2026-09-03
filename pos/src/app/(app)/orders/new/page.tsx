@@ -137,6 +137,8 @@ export default function NewOrderPage() {
   const placeOrderRef = useRef<(status: "COMPLETED" | "PENDING") => void>(
     () => {},
   );
+  /** Last click was on the Current Bill panel — Enter prints instead of adding a product. */
+  const billPanelActiveRef = useRef(false);
   const isWalkin = bill.orderType === "walkin";
   const paymentOptions = paymentsForOrderType(bill.orderType);
 
@@ -803,12 +805,21 @@ export default function NewOrderPage() {
       const inTable = Boolean(
         target?.closest?.("[data-pos-table-input='true']"),
       );
+      const inBill = Boolean(
+        target?.closest?.("[data-pos-bill-panel='true']"),
+      );
 
-      // Table field: Enter saves pending
-      if (inTable && e.key === "Enter") {
-        e.preventDefault();
-        placeOrderRef.current("PENDING");
-        return;
+      // Table field or Current Bill panel: Enter prints / completes
+      if ((inTable || inBill || billPanelActiveRef.current) && e.key === "Enter") {
+        if (inSearch) {
+          // Search bar still adds products.
+        } else if (isTextEntryTarget(target) && !inTable) {
+          return;
+        } else {
+          e.preventDefault();
+          focusTableOrSavePending();
+          return;
+        }
       }
 
       // Slash focuses search (unless typing in another field)
@@ -904,7 +915,12 @@ export default function NewOrderPage() {
 
   return (
     <div className="grid h-full min-h-0 grid-cols-1 lg:grid-cols-[1fr_380px]">
-      <div className="flex min-h-0 flex-col overflow-hidden lg:border-r lg:border-zinc-800">
+      <div
+        className="flex min-h-0 flex-col overflow-hidden lg:border-r lg:border-zinc-800"
+        onPointerDown={() => {
+          billPanelActiveRef.current = false;
+        }}
+      >
         {showMenuLoading ? (
           <div className="flex flex-1 items-center justify-center p-8 text-zinc-400">
             Loading menu…
@@ -1007,7 +1023,13 @@ export default function NewOrderPage() {
         </div>
       </div>
 
-      <aside className="flex max-h-[50vh] min-h-0 flex-col border-t border-zinc-800 bg-zinc-950 lg:max-h-none lg:border-t-0">
+      <aside
+        data-pos-bill-panel="true"
+        className="flex max-h-[50vh] min-h-0 flex-col border-t border-zinc-800 bg-zinc-950 lg:max-h-none lg:border-t-0"
+        onPointerDown={() => {
+          billPanelActiveRef.current = true;
+        }}
+      >
         <div className="shrink-0 border-b border-zinc-800 px-3 py-2">
           <h2 className="text-base font-black text-white">
             {bill.editingOrderId ? "Editing Pending Order" : "Current Bill"}

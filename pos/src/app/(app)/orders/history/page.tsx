@@ -74,12 +74,31 @@ export default function OrderHistoryPage() {
     const { startMs, endMs } = karachiDayBoundsUtc(dayYmd);
     const needle = q.trim().toLowerCase();
     const needleDigits = needle.replace(/\D/g, "");
+    const numericQuery =
+      Boolean(needleDigits) && needle.replace(/[#\s]/g, "") === needleDigits;
+
+    const dailyNumberHit = (o: Order) => {
+      const n = Number(o.daily_number) || 0;
+      if (n <= 0 || !needleDigits) return false;
+      const asText = String(n);
+      return (
+        asText === needleDigits ||
+        asText === needle ||
+        `#${asText}` === needle ||
+        asText.startsWith(needleDigits)
+      );
+    };
 
     return orders
       .filter((o) => {
         const t = new Date(o.created_at).getTime();
-        if (Number.isFinite(t)) return t >= startMs && t < endMs;
-        return (o.business_date || "") === dayYmd;
+        const inDay = Number.isFinite(t)
+          ? t >= startMs && t < endMs
+          : (o.business_date || "") === dayYmd;
+        // Number search (#3 / 3) finds that ticket even if the date picker
+        // is on another day — cashiers look up by daily number.
+        if (numericQuery && dailyNumberHit(o)) return true;
+        return inDay;
       })
       .filter((o) => (status === "all" ? true : o.order_status === status))
       .filter((o) => {
@@ -92,23 +111,23 @@ export default function OrderHistoryPage() {
             "";
           return name.toLowerCase().includes(needle);
         });
-        const dailyHit =
-          o.daily_number != null &&
-          (String(o.daily_number) === needle ||
-            String(o.daily_number) === needleDigits ||
-            `#${o.daily_number}` === needle);
         return (
-          dailyHit ||
-          o.customer_name.toLowerCase().includes(needle) ||
-          o.phone.includes(needle) ||
-          o.order_number.toLowerCase().includes(needle) ||
-          o.id.toLowerCase().includes(needle) ||
+          dailyNumberHit(o) ||
+          (o.customer_name || "").toLowerCase().includes(needle) ||
+          (o.phone || "").includes(needle) ||
+          (o.order_number || "").toLowerCase().includes(needle) ||
+          (o.id || "").toLowerCase().includes(needle) ||
           itemHit
         );
       })
       .sort((a, b) => {
         const da = a.daily_number || 0;
         const db = b.daily_number || 0;
+        if (numericQuery && needleDigits) {
+          const aExact = String(da) === needleDigits ? 1 : 0;
+          const bExact = String(db) === needleDigits ? 1 : 0;
+          if (aExact !== bExact) return bExact - aExact;
+        }
         if (da && db && da !== db) return db - da;
         return (
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
