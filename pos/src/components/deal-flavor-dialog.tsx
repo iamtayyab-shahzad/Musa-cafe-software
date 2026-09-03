@@ -14,6 +14,7 @@ import {
   parseDealPizzaSlots,
   type DealPizzaSlot,
 } from "@/lib/deal-flavors";
+import { moveGridIndex } from "@/lib/pos-keyboard";
 import { cn, formatPrice } from "@/lib/utils";
 import type { Category, Product, ProductSize } from "@/types";
 
@@ -148,21 +149,19 @@ export function DealFlavorDialog({
       const options =
         optionsBySlotRef.current[activeSlotRef.current] || [];
 
-      if (e.key === "ArrowRight") {
+      if (
+        e.key === "ArrowRight" ||
+        e.key === "ArrowLeft" ||
+        e.key === "ArrowDown" ||
+        e.key === "ArrowUp"
+      ) {
         e.preventDefault();
         e.stopPropagation();
         if (!options.length) return;
-        setKbIndex((i) => Math.min(options.length - 1, i + 1));
+        setKbIndex((i) => moveGridIndex(i, e.key, options.length, 2));
         return;
       }
-      if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        e.stopPropagation();
-        if (!options.length) return;
-        setKbIndex((i) => Math.max(0, i - 1));
-        return;
-      }
-      if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "Enter") {
+      if (e.key === "Enter") {
         e.preventDefault();
         e.stopPropagation();
         const slotList = slotsRef.current;
@@ -170,8 +169,7 @@ export function DealFlavorDialog({
         const allPicked =
           slotList.length > 0 &&
           slotList.every((slot) => Boolean(nextPicks[slot.id]));
-        // If everything is already picked, Enter/↑/↓ adds the deal.
-        if (allPicked && e.key === "Enter") {
+        if (allPicked) {
           confirmOrder(nextPicks);
           return;
         }
@@ -212,7 +210,7 @@ export function DealFlavorDialog({
         </DialogHeader>
 
         <p className="text-sm text-zinc-400">
-          Choose pizza flavors · ← → move · ↑ ↓ or Enter select
+          Choose pizza flavors · ← → ↑ ↓ move · Enter select
         </p>
 
         <div className="relative z-20 space-y-4 rounded-lg border border-orange-500/30 bg-orange-500/5 p-3">

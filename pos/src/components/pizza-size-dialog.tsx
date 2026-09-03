@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { isPizzaProduct, pizzaSellableSizes } from "@/lib/is-pizza";
+import { moveGridIndex } from "@/lib/pos-keyboard";
 import { cn, formatPrice } from "@/lib/utils";
 import type { Product, ProductSize } from "@/types";
 
@@ -51,35 +52,27 @@ export function PizzaSizeDialog({
   useEffect(() => {
     if (!open || !product) return;
 
-    const confirmFocused = () => {
-      const size = sizesRef.current[kbIndexRef.current];
-      if (!size) return;
-      onConfirm(product, size);
-      onOpenChange(false);
-    };
-
     const onKey = (e: KeyboardEvent) => {
       const list = sizesRef.current;
-      // ← → move between sizes only (horizontal).
-      if (e.key === "ArrowRight") {
+      if (
+        e.key === "ArrowRight" ||
+        e.key === "ArrowLeft" ||
+        e.key === "ArrowDown" ||
+        e.key === "ArrowUp"
+      ) {
         e.preventDefault();
         e.stopPropagation();
         if (!list.length) return;
-        setKbIndex((i) => Math.min(list.length - 1, i + 1));
+        setKbIndex((i) => moveGridIndex(i, e.key, list.length, 2));
         return;
       }
-      if (e.key === "ArrowLeft") {
+      if (e.key === "Enter") {
         e.preventDefault();
         e.stopPropagation();
-        if (!list.length) return;
-        setKbIndex((i) => Math.max(0, i - 1));
-        return;
-      }
-      // ↑ ↓ confirm the focused size (same as Enter).
-      if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "Enter") {
-        e.preventDefault();
-        e.stopPropagation();
-        confirmFocused();
+        const size = list[kbIndexRef.current];
+        if (!size) return;
+        onConfirm(product, size);
+        onOpenChange(false);
       }
     };
 
@@ -101,7 +94,7 @@ export function PizzaSizeDialog({
           <DialogTitle className="font-black">{product.name}</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-zinc-400">
-          Choose size · ← → move · ↑ ↓ or Enter add
+          Choose size · ← → ↑ ↓ move · Enter add
         </p>
         <div className="grid grid-cols-2 gap-2">
           {sizes.map((s, index) => {
