@@ -63,8 +63,8 @@ async function pumpPrintQueue() {
       if (!job) break;
       const ok = await runOnePrintJob(job.html, job.title);
       job.resolve(ok);
-      // Brief gap so the USB thermal / Windows spooler can finish the prior job.
-      await sleep(500);
+      // Keep the gap tiny — long sleeps made one-click feel broken.
+      if (printQueue.length > 0) await sleep(80);
     }
   } finally {
     printPumpRunning = false;
@@ -129,24 +129,23 @@ function runOnePrintJob(html: string, title: string): Promise<boolean> {
           return;
         }
 
-        // Spooler only needs the document briefly; 60s iframes stacked under load.
         const safety = window.setTimeout(() => {
           cleanup();
           finish(true);
-        }, 3500);
+        }, 1800);
 
         const onAfter = () => {
           window.clearTimeout(safety);
-          // Tiny delay after afterprint so GDI can flush to USB.
           window.setTimeout(() => {
             cleanup();
             finish(true);
-          }, 300);
+          }, 60);
         };
         win.addEventListener?.("afterprint", onAfter, { once: true });
       };
 
-      window.setTimeout(doPrint, 150);
+      // Start as soon as the iframe document is ready — 150ms felt laggy.
+      window.setTimeout(doPrint, 40);
     } catch {
       // Popup fallback — still strip scripts so we only print once.
       const w = window.open("", "_blank", "width=320,height=600");
@@ -189,7 +188,7 @@ function runOnePrintJob(html: string, title: string): Promise<boolean> {
             /* ignore */
           }
           finish(true);
-        }, 3500);
+        }, 1800);
 
         const onAfter = () => {
           window.clearTimeout(safety);
@@ -200,10 +199,10 @@ function runOnePrintJob(html: string, title: string): Promise<boolean> {
               /* ignore */
             }
             finish(true);
-          }, 300);
+          }, 60);
         };
         w.addEventListener?.("afterprint", onAfter, { once: true });
-      }, 150);
+      }, 40);
     }
   });
 }
@@ -571,38 +570,33 @@ export function buildKitchenReceiptHtml(order: Order) {
   }
   .table-big {
     text-align: center;
-    font-size: 32px;
-    font-weight: 900;
-    line-height: 1.05;
-    letter-spacing: 1px;
-    border: 2px solid #000;
-    padding: 8px 4px;
-    margin: 0 0 8px;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.4px;
+    border: 1.5px solid #000;
+    padding: 3px 4px;
+    margin: 0 0 4px;
     text-transform: uppercase;
   }
   .service-big {
     text-align: center;
-    font-size: 18px;
+    font-size: 15px;
     font-weight: 700;
-    letter-spacing: 0.5px;
-    margin: 0 0 6px;
+    letter-spacing: 0.4px;
+    margin: 0 0 4px;
     text-transform: uppercase;
   }
   .daily-big {
     text-align: center;
-    font-size: 36px;
-    font-weight: 900;
-    line-height: 1.05;
-    letter-spacing: 1px;
-    border: 2px solid #000;
-    padding: 6px 4px;
-    margin: 0 0 6px;
-  }
-  .daily-big .lbl {
-    display: block;
-    font-size: 11px;
+    font-size: 15px;
     font-weight: 700;
-    letter-spacing: 0.5px;
+    line-height: 1.2;
+    letter-spacing: 0.4px;
+    border: 1.5px solid #000;
+    padding: 3px 4px;
+    margin: 0 0 4px;
+    text-transform: uppercase;
   }
 </style>
 </head>
@@ -610,7 +604,7 @@ export function buildKitchenReceiptHtml(order: Order) {
   <div class="shop">${escapeHtml(shop.name)}</div>
   ${
     order.daily_number && order.daily_number > 0
-      ? `<div class="daily-big"><span class="lbl">ORDER</span>#${order.daily_number}</div>`
+      ? `<div class="daily-big">Order #${order.daily_number}</div>`
       : ""
   }
   ${
@@ -657,6 +651,61 @@ export function printKitchenReceipt(order: Order): Promise<boolean> {
   return openPrintWindow(
     buildKitchenReceiptHtml(ensureReceiptItemNames(order)),
     `Kitchen ${order.order_number || order.id}`,
+  );
+}
+
+function extractHtmlPart(html: string, tag: "style" | "body"): string {
+  const re =
+    tag === "style"
+      ? /<style[^>]*>([\s\S]*?)<\/style>/i
+      : /<body[^>]*>([\s\S]*?)<\/body>/i;
+  return html.match(re)?.[1]?.trim() || "";
+}
+
+/**
+ * One-click complete: kitchen + customer in a single print() so the cashier
+ * does not wait for two dialogs / two afterprint cycles.
+ */
+export function buildOneClickReceiptsHtml(
+  order: Order,
+  settings: Settings | null,
+): string {
+  const named = ensureReceiptItemNames(order);
+  const completed = { ...named, order_status: "COMPLETED" as const };
+  const kitchen = buildKitchenReceiptHtml(named);
+  const customer = buildCustomerReceiptHtml(completed, settings);
+  const kitchenCss = extractHtmlPart(kitchen, "style");
+  const customerCss = extractHtmlPart(customer, "style");
+  const kitchenBody = extractHtmlPart(kitchen, "body");
+  const customerBody = extractHtmlPart(customer, "body");
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Order ${escapeHtml(String(order.daily_number || order.order_number || order.id))}</title>
+<style>
+${kitchenCss}
+${customerCss}
+.ticket { page-break-after: always; }
+.ticket:last-child { page-break-after: auto; }
+</style>
+</head>
+<body>
+  <div class="ticket">${kitchenBody}</div>
+  <div class="ticket">${customerBody}</div>
+</body>
+</html>`;
+}
+
+/** Kitchen + customer receipts in one spool job (admin one-click mode). */
+export function printOneClickReceipts(
+  order: Order,
+  settings: Settings | null,
+): Promise<boolean> {
+  return openPrintWindow(
+    buildOneClickReceiptsHtml(order, settings),
+    `Order ${order.order_number || order.id}`,
   );
 }
 
@@ -901,8 +950,8 @@ export function buildCustomerReceiptHtml(
     text-align: center;
     font-size: 18px;
     font-weight: 700;
-    line-height: 1.15;
-    letter-spacing: 0.5px;
+    line-height: 1.2;
+    letter-spacing: 0.4px;
     border: 1.5px solid #000;
     padding: 3px 4px;
     margin: 0 0 3px;
@@ -910,18 +959,14 @@ export function buildCustomerReceiptHtml(
   }
   .daily-line {
     text-align: center;
-    font-size: 28px;
-    font-weight: 900;
-    line-height: 1.1;
-    border: 2px solid #000;
-    padding: 4px;
-    margin: 0 0 4px;
-  }
-  .daily-line .lbl {
-    display: block;
-    font-size: 10px;
+    font-size: 18px;
     font-weight: 700;
+    line-height: 1.2;
     letter-spacing: 0.4px;
+    border: 1.5px solid #000;
+    padding: 3px 4px;
+    margin: 0 0 3px;
+    text-transform: uppercase;
   }
 </style>
 </head>
@@ -929,7 +974,7 @@ export function buildCustomerReceiptHtml(
   <h1>${escapeHtml(settings?.restaurant_name || shop.name)}</h1>
   ${
     order.daily_number && order.daily_number > 0
-      ? `<div class="daily-line"><span class="lbl">ORDER</span>#${order.daily_number}</div>`
+      ? `<div class="daily-line">Order #${order.daily_number}</div>`
       : ""
   }
   ${

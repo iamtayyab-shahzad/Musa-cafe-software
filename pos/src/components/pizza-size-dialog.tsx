@@ -51,29 +51,35 @@ export function PizzaSizeDialog({
   useEffect(() => {
     if (!open || !product) return;
 
+    const confirmFocused = () => {
+      const size = sizesRef.current[kbIndexRef.current];
+      if (!size) return;
+      onConfirm(product, size);
+      onOpenChange(false);
+    };
+
     const onKey = (e: KeyboardEvent) => {
       const list = sizesRef.current;
-      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      // ← → move between sizes only (horizontal).
+      if (e.key === "ArrowRight") {
         e.preventDefault();
         e.stopPropagation();
         if (!list.length) return;
         setKbIndex((i) => Math.min(list.length - 1, i + 1));
         return;
       }
-      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      if (e.key === "ArrowLeft") {
         e.preventDefault();
         e.stopPropagation();
         if (!list.length) return;
         setKbIndex((i) => Math.max(0, i - 1));
         return;
       }
-      if (e.key === "Enter") {
+      // ↑ ↓ confirm the focused size (same as Enter).
+      if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "Enter") {
         e.preventDefault();
         e.stopPropagation();
-        const size = list[kbIndexRef.current];
-        if (!size) return;
-        onConfirm(product, size);
-        onOpenChange(false);
+        confirmFocused();
       }
     };
 
@@ -95,7 +101,7 @@ export function PizzaSizeDialog({
           <DialogTitle className="font-black">{product.name}</DialogTitle>
         </DialogHeader>
         <p className="text-sm text-zinc-400">
-          Choose size · ↑↓←→ move · Enter add
+          Choose size · ← → move · ↑ ↓ or Enter add
         </p>
         <div className="grid grid-cols-2 gap-2">
           {sizes.map((s, index) => {

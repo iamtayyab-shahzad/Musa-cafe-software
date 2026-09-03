@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,6 +29,8 @@ type Props = {
 /**
  * POS deal dialog: staff must pick a Regular Pizza flavor for each pizza
  * slot in the deal (same rules as the website).
+ *
+ * Keyboard: ← → move flavors · ↑ ↓ or Enter select / add
  */
 export function DealFlavorDialog({
   open,
@@ -39,6 +41,15 @@ export function DealFlavorDialog({
   onConfirm,
 }: Props) {
   const [picks, setPicks] = useState<Record<string, string>>({});
+  const [activeSlot, setActiveSlot] = useState(0);
+  const [kbIndex, setKbIndex] = useState(0);
+
+  const picksRef = useRef(picks);
+  const activeSlotRef = useRef(activeSlot);
+  const kbIndexRef = useRef(kbIndex);
+  picksRef.current = picks;
+  activeSlotRef.current = activeSlot;
+  kbIndexRef.current = kbIndex;
 
   const slots = useMemo<DealPizzaSlot[]>(
     () => (product ? parseDealPizzaSlots(product.description || "") : []),
@@ -53,9 +64,124 @@ export function DealFlavorDialog({
     }));
   }, [products, categories]);
 
+  const optionsBySlot = useMemo(() => {
+    return slots.map((slot) => flavorsForSlot(menuWithCategories, slot));
+  }, [slots, menuWithCategories]);
+
+  const optionsBySlotRef = useRef(optionsBySlot);
+  const slotsRef = useRef(slots);
+  optionsBySlotRef.current = optionsBySlot;
+  slotsRef.current = slots;
+
   useEffect(() => {
-    if (open) setPicks({});
+    if (!open) return;
+    setPicks({});
+    setActiveSlot(0);
+    setKbIndex(0);
+    kbIndexRef.current = 0;
+    activeSlotRef.current = 0;
   }, [open, product?.id]);
+
+  useEffect(() => {
+    setKbIndex(0);
+    kbIndexRef.current = 0;
+  }, [activeSlot]);
+
+  useEffect(() => {
+    if (!open || !product) return;
+
+    const buildNote = (nextPicks: Record<string, string>) =>
+      slotsRef.current
+        .map((slot) => {
+          const flavor = menuWithCategories.find(
+            (p) => p.id === nextPicks[slot.id],
+          );
+          return flavor ? `${slot.label}: ${flavor.name}` : null;
+        })
+        .filter(Boolean)
+        .join("; ");
+
+    const confirmOrder = (nextPicks: Record<string, string>) => {
+      const size = product.sizes?.[0];
+      const slotList = slotsRef.current;
+      const complete =
+        slotList.length > 0 &&
+        slotList.every((slot) => Boolean(nextPicks[slot.id]));
+      if (!size || !complete) return false;
+      onConfirm(product, size, buildNote(nextPicks));
+      onOpenChange(false);
+      return true;
+    };
+
+    const selectFocused = () => {
+      const slotList = slotsRef.current;
+      const slotIdx = activeSlotRef.current;
+      const slot = slotList[slotIdx];
+      const options = optionsBySlotRef.current[slotIdx] || [];
+      const focused = options[kbIndexRef.current];
+      if (!slot || !focused) return;
+
+      const nextPicks = { ...picksRef.current, [slot.id]: focused.id };
+      setPicks(nextPicks);
+      picksRef.current = nextPicks;
+
+      const nextIncomplete = slotList.findIndex(
+        (s, i) => i > slotIdx && !nextPicks[s.id],
+      );
+      if (nextIncomplete >= 0) {
+        setActiveSlot(nextIncomplete);
+        activeSlotRef.current = nextIncomplete;
+        return;
+      }
+
+      const firstIncomplete = slotList.findIndex((s) => !nextPicks[s.id]);
+      if (firstIncomplete >= 0) {
+        setActiveSlot(firstIncomplete);
+        activeSlotRef.current = firstIncomplete;
+        return;
+      }
+
+      confirmOrder(nextPicks);
+    };
+
+    const onKey = (e: KeyboardEvent) => {
+      const options =
+        optionsBySlotRef.current[activeSlotRef.current] || [];
+
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!options.length) return;
+        setKbIndex((i) => Math.min(options.length - 1, i + 1));
+        return;
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!options.length) return;
+        setKbIndex((i) => Math.max(0, i - 1));
+        return;
+      }
+      if (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "Enter") {
+        e.preventDefault();
+        e.stopPropagation();
+        const slotList = slotsRef.current;
+        const nextPicks = picksRef.current;
+        const allPicked =
+          slotList.length > 0 &&
+          slotList.every((slot) => Boolean(nextPicks[slot.id]));
+        // If everything is already picked, Enter/↑/↓ adds the deal.
+        if (allPicked && e.key === "Enter") {
+          confirmOrder(nextPicks);
+          return;
+        }
+        selectFocused();
+      }
+    };
+
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [open, product, menuWithCategories, onConfirm, onOpenChange]);
 
   if (!product) return null;
 
@@ -76,6 +202,7 @@ export function DealFlavorDialog({
       <DialogContent
         className="max-h-[90vh] overflow-y-auto sm:max-w-lg"
         onOpenAutoFocus={(e) => e.preventDefault()}
+        data-pos-dialog-open="true"
       >
         <DialogHeader>
           <DialogTitle className="text-xl font-black">
@@ -84,15 +211,26 @@ export function DealFlavorDialog({
           <p className="text-sm text-zinc-400">{product.description}</p>
         </DialogHeader>
 
+        <p className="text-sm text-zinc-400">
+          Choose pizza flavors · ← → move · ↑ ↓ or Enter select
+        </p>
+
         <div className="relative z-20 space-y-4 rounded-lg border border-orange-500/30 bg-orange-500/5 p-3">
           <Label className="block text-orange-300">
             Choose pizza flavors (size matches deal)
           </Label>
-          {slots.map((slot) => {
-            const options = flavorsForSlot(menuWithCategories, slot);
+          {slots.map((slot, slotIndex) => {
+            const options = optionsBySlot[slotIndex] || [];
             const selectedId = picks[slot.id];
+            const isActive = slotIndex === activeSlot;
             return (
-              <div key={slot.id} className="space-y-2">
+              <div
+                key={slot.id}
+                className={cn(
+                  "space-y-2 rounded-md p-2 transition",
+                  isActive && "bg-orange-500/10 ring-1 ring-orange-500/40",
+                )}
+              >
                 <Label className="text-xs text-zinc-400">{slot.label}</Label>
                 {options.length === 0 ? (
                   <p className="text-sm text-zinc-500">
@@ -102,20 +240,29 @@ export function DealFlavorDialog({
                   </p>
                 ) : (
                   <div className="grid max-h-44 grid-cols-1 gap-1.5 overflow-y-auto sm:grid-cols-2">
-                    {options.map((p) => {
+                    {options.map((p, optionIndex) => {
                       const selected = selectedId === p.id;
+                      const focused = isActive && optionIndex === kbIndex;
                       return (
                         <button
                           key={p.id}
                           type="button"
-                          onClick={() =>
-                            setPicks((prev) => ({ ...prev, [slot.id]: p.id }))
-                          }
+                          onMouseEnter={() => {
+                            setActiveSlot(slotIndex);
+                            setKbIndex(optionIndex);
+                          }}
+                          onClick={() => {
+                            setActiveSlot(slotIndex);
+                            setKbIndex(optionIndex);
+                            setPicks((prev) => ({ ...prev, [slot.id]: p.id }));
+                          }}
                           className={cn(
                             "rounded-md border px-3 py-2 text-left text-sm transition-colors",
-                            selected
-                              ? "border-orange-500 bg-orange-500/20 text-orange-200"
-                              : "border-zinc-700 bg-zinc-900 text-zinc-200 hover:border-zinc-500",
+                            focused
+                              ? "pos-kb-focus border-orange-500 bg-orange-500 text-black"
+                              : selected
+                                ? "border-orange-500 bg-orange-500/20 text-orange-200"
+                                : "border-zinc-700 bg-zinc-900 text-zinc-200 hover:border-zinc-500",
                           )}
                         >
                           {p.name}

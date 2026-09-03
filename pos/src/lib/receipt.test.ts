@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildCustomerReceiptHtml,
   buildKitchenReceiptHtml,
+  buildOneClickReceiptsHtml,
   ensureReceiptItemNames,
 } from "./receipt";
 import { parseDealIncludedItems } from "./deal-flavors";
@@ -180,7 +181,7 @@ describe("kitchen ticket layout", () => {
     expect(customer).toMatch(/class="meta">[\s\S]*? · /);
   });
 
-  it("prints large daily order number on kitchen and customer tickets", () => {
+  it("prints daily order number on one line matching shop-name size", () => {
     const order = ensureReceiptItemNames(
       {
         ...baseOrder([
@@ -203,10 +204,41 @@ describe("kitchen ticket layout", () => {
     );
     const kitchen = buildKitchenReceiptHtml(order);
     const customer = buildCustomerReceiptHtml(order, null);
-    expect(kitchen).toContain("#12");
+    expect(kitchen).toContain("Order #12");
     expect(kitchen).toContain("daily-big");
-    expect(customer).toContain("#12");
+    expect(kitchen).not.toContain('<span class="lbl">ORDER</span>');
+    expect(customer).toContain("Order #12");
     expect(customer).toContain("daily-line");
+    expect(customer).not.toContain('<span class="lbl">ORDER</span>');
+  });
+
+  it("builds one-click kitchen+customer in a single document", () => {
+    const order = ensureReceiptItemNames(
+      {
+        ...baseOrder([
+          {
+            id: "i1",
+            created_at: "",
+            updated_at: "",
+            order_id: "ord-1",
+            product_id: "p1",
+            product_size_id: "s1",
+            quantity: 1,
+            price: 100,
+            product_name: "Zinger Burger",
+          },
+        ]),
+        daily_number: 3,
+        order_notes: "SERVICE:DINE_IN | TABLE:1",
+      },
+    );
+    const html = buildOneClickReceiptsHtml(order, null);
+    expect(html).toContain("Kitchen Order Ticket");
+    expect(html).toContain("TOTAL");
+    expect(html).toContain('class="ticket"');
+    expect(html).toContain("page-break-after: always");
+    expect(html).toContain("Order #3");
+    expect(html).toContain("TABLE 1");
   });
 
   it("prints Parcel for walk-in parcel service mode", () => {

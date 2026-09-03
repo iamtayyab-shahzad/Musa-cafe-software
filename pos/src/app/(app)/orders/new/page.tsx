@@ -51,9 +51,12 @@ import {
 import {
   printCustomerReceipt,
   printKitchenReceipt,
+  printOneClickReceipts,
   encodeKitchenInstructions,
   encodeWalkinOrderNotes,
 } from "@/lib/receipt";
+import { allocateLocalDailyNumber, uniqueOrderCode } from "@/lib/daily-order-number";
+import { shop } from "@/lib/shop";
 import { activePromoInfo, weekendPromoLabel } from "@/lib/discount-rules";
 import { deleteDraft } from "@/lib/offline-db";
 import { ordersShareIdentity } from "@/lib/order-identity";
@@ -481,11 +484,6 @@ export default function NewOrderPage() {
 
     void (async () => {
       try {
-        const { allocateLocalDailyNumber, uniqueOrderCode } = await import(
-          "@/lib/daily-order-number"
-        );
-        const { shop } = await import("@/lib/shop");
-
         const payload = buildPayload();
         const editingOrderId = bill.editingOrderId;
         const draftId = bill.draftId;
@@ -592,6 +590,14 @@ export default function NewOrderPage() {
         bill.clearBill();
         focusSearch();
 
+        // Print immediately — never wait on sync / second Enter.
+        const printPromise =
+          oneClick || (editingCompleted && status === "PENDING")
+            ? printOneClickReceipts(printable, settings || null)
+            : effectiveStatus === "COMPLETED"
+              ? printCustomerReceipt(printable, settings || null)
+              : printKitchenReceipt(printable);
+
         if (editingOrderId) {
           await ordersApi.update(editingOrderId, {
             customer_name: payload.customer_name,
@@ -630,22 +636,17 @@ export default function NewOrderPage() {
           }
         }
 
+        // Unlock UI while the printer finishes spooling.
+        setBusy(false);
+
+        const printed = await printPromise;
         if (oneClick || (editingCompleted && status === "PENDING")) {
-          const kitchenPrint = await printKitchenReceipt(printable);
-          const customerPrint = await printCustomerReceipt(
-            { ...printable, order_status: "COMPLETED" },
-            settings || null,
-          );
           toast.success(
-            !kitchenPrint || !customerPrint
-              ? "Order saved — allow popups if a receipt did not print"
-              : "Order completed — kitchen & customer receipts printed",
+            printed
+              ? "Order completed — kitchen & customer receipts printed"
+              : "Order saved — allow popups if a receipt did not print",
           );
         } else if (effectiveStatus === "COMPLETED") {
-          const printed = await printCustomerReceipt(
-            printable,
-            settings || null,
-          );
           toast.success(
             !printed
               ? "Order completed — allow popups to print customer receipt"
@@ -654,7 +655,6 @@ export default function NewOrderPage() {
                 : "Order completed & customer receipt printed",
           );
         } else {
-          const printed = await printKitchenReceipt(printable);
           toast.success(
             !printed
               ? "Saved to Pending — allow popups to print kitchen receipt"
@@ -678,7 +678,6 @@ export default function NewOrderPage() {
           qc.invalidateQueries({ queryKey: ["orders"], exact: true }),
           qc.invalidateQueries({ queryKey: ["orders", "pending"] }),
         ]);
-      } finally {
         setBusy(false);
       }
     })();
@@ -1136,22 +1135,60 @@ export default function NewOrderPage() {
             </div>
           ) : null}
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {bill.items.map((item) => {
               const product = products.find((p) => p.id === item.product_id);
+              const sizeLabel = isPizzaSizeLabel(item.size)
+                ? item.size
+                : item.size && item.size !== "Regular"
+                  ? item.size
+                  : "";
+              const pizzaSizes =
+                product && isPizzaProduct(product)
+                  ? pizzaSellableSizes(product.sizes)
+                  : [];
+
               return (
                 <div
                   key={item.key}
-                  className="rounded-lg border border-zinc-800 bg-black/40 p-3"
+                  className="rounded-md border border-zinc-800 bg-black/40 px-2 py-1.5"
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-bold text-white">{item.product_name}</p>
+                  <div className="flex min-w-0 items-center gap-1.5">
+                    <div className="flex shrink-0 items-center gap-0.5">
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        className="h-7 w-7"
+                        onClick={() => bill.decrease(item.key)}
+                        aria-label="Decrease quantity"
+                      >
+                        <Minus className="h-3.5 w-3.5" />
+                      </Button>
+                      <span className="w-6 text-center text-sm font-bold tabular-nums">
+                        {item.quantity}
+                      </span>
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        className="h-7 w-7"
+                        onClick={() => bill.increase(item.key)}
+                        aria-label="Increase quantity"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className="truncate text-sm font-bold leading-tight text-white"
+                        title={item.product_name}
+                      >
+                        {item.product_name}
+                      </p>
                       {item.allow_manual_price ? (
-                        <div className="mt-1 flex items-center gap-2">
-                          <Label className="text-xs text-zinc-400">Price</Label>
+                        <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
                           <Input
-                            className="h-8 w-24 text-sm"
+                            className="h-7 w-20 text-xs"
                             inputMode="numeric"
                             value={String(item.price)}
                             onChange={(e) => {
@@ -1163,42 +1200,42 @@ export default function NewOrderPage() {
                               }
                             }}
                           />
-                          {isPizzaSizeLabel(item.size) ? (
-                            <span className="text-xs text-zinc-500">
-                              · {item.size}
-                            </span>
-                          ) : item.size && item.size !== "Regular" ? (
-                            <span className="text-xs text-zinc-500">
-                              · {item.size}
+                          {sizeLabel ? (
+                            <span className="truncate text-[11px] text-zinc-500">
+                              · {sizeLabel}
                             </span>
                           ) : null}
                         </div>
                       ) : (
-                        <p className="text-sm text-orange-400">
+                        <p className="truncate text-xs text-orange-400">
                           {formatPrice(item.price, currency)}
-                          {isPizzaSizeLabel(item.size) ? ` · ${item.size}` : ""}
+                          {sizeLabel ? ` · ${sizeLabel}` : ""}
                         </p>
                       )}
                     </div>
+
+                    <span className="shrink-0 text-sm font-bold tabular-nums text-white">
+                      {formatPrice(item.price * item.quantity, currency)}
+                    </span>
                     <button
                       type="button"
                       onClick={() => bill.remove(item.key)}
-                      className="text-zinc-500 hover:text-red-400"
+                      className="shrink-0 p-1 text-zinc-500 hover:text-red-400"
+                      aria-label="Remove item"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                  {product &&
-                    isPizzaProduct(product) &&
-                    pizzaSellableSizes(product.sizes).length > 1 && (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {pizzaSellableSizes(product.sizes).map((s: ProductSize) => (
+
+                  {pizzaSizes.length > 1 ? (
+                    <div className="mt-1 flex flex-wrap gap-1 pl-[4.75rem]">
+                      {pizzaSizes.map((s: ProductSize) => (
                         <button
                           key={s.id}
                           type="button"
                           onClick={() => bill.changeSize(item.key, s)}
                           className={cn(
-                            "rounded px-2 py-1 text-xs font-bold",
+                            "rounded px-1.5 py-0.5 text-[11px] font-bold",
                             item.size_id === s.id
                               ? "bg-orange-500 text-black"
                               : "bg-zinc-800 text-zinc-400",
@@ -1208,31 +1245,7 @@ export default function NewOrderPage() {
                         </button>
                       ))}
                     </div>
-                  )}
-                  <div className="mt-2 flex items-center gap-2">
-                    <Button
-                      size="icon"
-                      variant="secondary"
-                      className="h-9 w-9"
-                      onClick={() => bill.decrease(item.key)}
-                    >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <span className="w-8 text-center text-lg font-bold">
-                      {item.quantity}
-                    </span>
-                    <Button
-                      size="icon"
-                      variant="secondary"
-                      className="h-9 w-9"
-                      onClick={() => bill.increase(item.key)}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                    <span className="ml-auto font-bold text-white">
-                      {formatPrice(item.price * item.quantity, currency)}
-                    </span>
-                  </div>
+                  ) : null}
                 </div>
               );
             })}
