@@ -716,6 +716,19 @@ export default function NewOrderPage() {
     toast.message("Bill cleared");
   };
 
+  /** Leave edit mode without saving — original order on server stays unchanged. */
+  const cancelEdit = useCallback(() => {
+    if (!bill.editingOrderId) {
+      bill.clearBill();
+      toast.message("Bill cleared");
+      focusSearch();
+      return;
+    }
+    bill.clearBill();
+    toast.message("Edit cancelled — order left unchanged");
+    focusSearch();
+  }, [bill, focusSearch]);
+
   placeOrderRef.current = placeOrder;
 
   const reprint = () => {
@@ -831,6 +844,13 @@ export default function NewOrderPage() {
         }
       }
 
+      // Escape while editing: discard local changes, leave server order alone
+      if (e.key === "Escape" && bill.editingOrderId && !isTextEntryTarget(target)) {
+        e.preventDefault();
+        cancelEdit();
+        return;
+      }
+
       // Slash focuses search (unless typing in another field)
       if (
         e.key === "/" &&
@@ -911,6 +931,8 @@ export default function NewOrderPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [
     addHighlightedProduct,
+    bill.editingOrderId,
+    cancelEdit,
     cancelPasswordOpen,
     dealProduct,
     drinkProduct,
@@ -1044,9 +1066,21 @@ export default function NewOrderPage() {
             {bill.editingOrderId ? "Editing Pending Order" : "Current Bill"}
           </h2>
           {bill.editingOrderId ? (
-            <p className="mt-0.5 text-[11px] text-amber-300">
-              Changes will update the existing pending order.
-            </p>
+            <div className="mt-0.5 flex flex-wrap items-center gap-2">
+              <p className="text-[11px] text-amber-300">
+                Changes will update the existing pending order.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 text-[11px]"
+                disabled={busy}
+                onClick={cancelEdit}
+              >
+                Cancel Edit
+              </Button>
+            </div>
           ) : null}
           <div className="mt-1.5 flex gap-1.5">
             {ORDER_TYPES.map((t) => (
@@ -1398,10 +1432,16 @@ export default function NewOrderPage() {
           </Button>
           <Button
             variant="danger"
-            onClick={() => setCancelPasswordOpen(true)}
+            onClick={() => {
+              if (bill.editingOrderId) {
+                cancelEdit();
+                return;
+              }
+              setCancelPasswordOpen(true);
+            }}
             disabled={busy}
           >
-            Cancel
+            {bill.editingOrderId ? "Cancel Edit" : "Cancel"}
           </Button>
           <Button
             variant="success"
