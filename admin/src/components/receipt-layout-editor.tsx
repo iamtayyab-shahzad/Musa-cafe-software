@@ -129,8 +129,8 @@ export function ReceiptLayoutEditor({
           <Label>Receipt print layout</Label>
           <p className="mt-1 text-sm text-zinc-500">
             Reorder blocks, change size and alignment. Kitchen and customer
-            tickets are separate. Default is the layout that already prints
-            well.
+            tickets can match or differ. Default restores your preferred print
+            style anytime.
           </p>
         </div>
         <Button
@@ -140,7 +140,7 @@ export function ReceiptLayoutEditor({
           disabled={isDefault}
           onClick={() => commit(defaultReceiptLayout())}
         >
-          Default (current print)
+          Default (your preferred print)
         </Button>
       </div>
 

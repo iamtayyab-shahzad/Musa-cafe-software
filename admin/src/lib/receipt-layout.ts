@@ -113,7 +113,10 @@ function block(
   };
 }
 
-/** Exact layout of the receipts that already print well. Reset restores this. */
+/**
+ * Your preferred layout (kitchen + customer as they print well today).
+ * Admin "Default" always restores this.
+ */
 export function defaultReceiptLayout(): ReceiptLayout {
   return {
     version: 1,
@@ -179,6 +182,123 @@ export function defaultReceiptLayout(): ReceiptLayout {
         align: "center",
       }),
       block("c-meta", "phone_datetime", {
+        fontSize: 11,
+        fontWeight: 400,
+        align: "center",
+      }),
+      block("c-cust", "customer", {
+        fontSize: 12,
+        fontWeight: 400,
+        align: "left",
+      }),
+      block("c-pay", "payment", {
+        fontSize: 12,
+        fontWeight: 400,
+        align: "left",
+      }),
+      block("c-items", "items", { fontSize: 13, fontWeight: 400, align: "left" }),
+      block("c-tot", "totals", { fontSize: 12, fontWeight: 400, align: "left" }),
+      block("c-notes", "notes", { fontSize: 12, fontWeight: 400, align: "left" }),
+      block("c-thanks", "thank_you", {
+        fontSize: 12,
+        fontWeight: 400,
+        align: "center",
+        text: "Thank you!",
+      }),
+      block("c-qr", "website_qr", {
+        fontSize: 11,
+        fontWeight: 400,
+        align: "center",
+      }),
+      block("c-staff", "staff_notes", {
+        fontSize: 11,
+        fontWeight: 400,
+        align: "left",
+      }),
+    ],
+  };
+}
+
+/**
+ * Temporary cashier preference: phone under shop name, date/time stay in the
+ * meta place, kitchen + customer share the same header style.
+ * Used while receipt_layout is empty; click Default to restore preferred print.
+ */
+export function cashierReceiptLayout(): ReceiptLayout {
+  return {
+    version: 1,
+    kitchen: [
+      block("k-shop", "shop_name", {
+        fontSize: 15,
+        fontWeight: 600,
+        align: "center",
+      }),
+      block("k-phone", "phone", {
+        fontSize: 11,
+        fontWeight: 400,
+        align: "center",
+      }),
+      block("k-order", "order_number", {
+        fontSize: 15,
+        fontWeight: 700,
+        align: "center",
+      }),
+      block("k-table", "table_service", {
+        fontSize: 15,
+        fontWeight: 700,
+        align: "center",
+      }),
+      block("k-when", "datetime", {
+        fontSize: 11,
+        fontWeight: 400,
+        align: "center",
+      }),
+      block("k-cust", "customer", {
+        fontSize: 12,
+        fontWeight: 400,
+        align: "left",
+      }),
+      block("k-items", "items", { fontSize: 13, fontWeight: 400, align: "left" }),
+      block("k-count", "item_count", {
+        fontSize: 12,
+        fontWeight: 400,
+        align: "left",
+      }),
+      block("k-notes", "notes", { fontSize: 12, fontWeight: 400, align: "left" }),
+      block("k-thanks", "thank_you", {
+        fontSize: 12,
+        fontWeight: 400,
+        align: "center",
+        text: "Thank you!",
+      }),
+      block("k-staff", "staff_notes", {
+        fontSize: 11,
+        fontWeight: 400,
+        align: "left",
+      }),
+    ],
+    customer: [
+      block("c-shop", "shop_name", {
+        fontSize: 15,
+        fontWeight: 600,
+        align: "center",
+      }),
+      block("c-phone", "phone", {
+        fontSize: 11,
+        fontWeight: 400,
+        align: "center",
+      }),
+      block("c-order", "order_number", {
+        fontSize: 15,
+        fontWeight: 700,
+        align: "center",
+      }),
+      block("c-table", "table", {
+        fontSize: 15,
+        fontWeight: 700,
+        align: "center",
+      }),
+      block("c-when", "datetime", {
         fontSize: 11,
         fontWeight: 400,
         align: "center",
@@ -317,18 +437,19 @@ function sanitizeList(raw: unknown, kind: ReceiptKind): ReceiptBlock[] {
 }
 
 export function parseReceiptLayout(raw: unknown): ReceiptLayout {
-  if (raw == null || raw === "") return defaultReceiptLayout();
+  // Empty = temporary cashier layout. Saved Default JSON restores preferred print.
+  if (raw == null || raw === "") return cashierReceiptLayout();
   let value: unknown = raw;
   if (typeof raw === "string") {
     const trimmed = raw.trim();
-    if (!trimmed) return defaultReceiptLayout();
+    if (!trimmed) return cashierReceiptLayout();
     try {
       value = JSON.parse(trimmed) as unknown;
     } catch {
-      return defaultReceiptLayout();
+      return cashierReceiptLayout();
     }
   }
-  if (!value || typeof value !== "object") return defaultReceiptLayout();
+  if (!value || typeof value !== "object") return cashierReceiptLayout();
   const obj = value as Record<string, unknown>;
   return {
     version: 1,

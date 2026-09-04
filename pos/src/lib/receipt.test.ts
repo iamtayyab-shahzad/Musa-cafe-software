@@ -236,12 +236,14 @@ describe("kitchen ticket layout", () => {
       },
     );
     const html = buildOneClickReceiptsHtml(order, null);
-    expect(html).toContain("Kitchen Order Ticket");
+    expect(html).toContain("Thank you!");
     expect(html).toContain("TOTAL");
     expect(html).toContain('class="ticket"');
     expect(html).toContain("page-break-after: always");
     expect(html).toContain("Order #3");
     expect(html).toContain("TABLE 1");
+    // Temporary cashier layout: both tickets share the same header style.
+    expect(html).not.toContain("Kitchen Order Ticket");
   });
 
   it("prints Parcel for walk-in parcel service mode", () => {

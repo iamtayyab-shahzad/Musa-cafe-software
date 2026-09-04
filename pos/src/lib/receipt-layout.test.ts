@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  cashierReceiptLayout,
   defaultReceiptLayout,
   parseReceiptLayout,
   serializeReceiptLayout,
@@ -45,44 +46,74 @@ function order(): Order {
   };
 }
 
+const settings = {
+  id: "s",
+  created_at: "",
+  updated_at: "",
+  restaurant_name: "MUSA CAFE",
+  phone: "03095997786",
+  currency: "Rs",
+} as never;
+
 describe("receipt layout", () => {
-  it("empty settings use the current working default", () => {
-    expect(parseReceiptLayout("").kitchen[0].type).toBe("shop_name");
-    expect(parseReceiptLayout(null).customer.some((b) => b.type === "phone_datetime")).toBe(
+  it("empty settings use temporary cashier layout", () => {
+    const parsed = parseReceiptLayout("");
+    expect(parsed.customer.map((b) => b.type).slice(0, 5)).toEqual([
+      "shop_name",
+      "phone",
+      "order_number",
+      "table",
+      "datetime",
+    ]);
+    expect(parsed.kitchen.map((b) => b.type).slice(0, 5)).toEqual([
+      "shop_name",
+      "phone",
+      "order_number",
+      "table_service",
+      "datetime",
+    ]);
+    expect(parsed.customer.some((b) => b.type === "phone_datetime")).toBe(false);
+  });
+
+  it("Default preferred layout keeps phone with date/time on customer", () => {
+    expect(
+      defaultReceiptLayout().customer.some((b) => b.type === "phone_datetime"),
+    ).toBe(true);
+    expect(defaultReceiptLayout().kitchen.some((b) => b.type === "banner")).toBe(
       true,
     );
   });
 
-  it("default print still shows order number, table, and thank you", () => {
+  it("cashier print puts phone under shop name on both tickets", () => {
     const o = order();
-    const kitchen = buildKitchenReceiptHtml(o, null);
-    const customer = buildCustomerReceiptHtml(o, {
-      id: "s",
-      created_at: "",
-      updated_at: "",
-      restaurant_name: "MUSA CAFE",
-      phone: "03095997786",
-      currency: "Rs",
-    } as never);
+    const kitchen = buildKitchenReceiptHtml(o, settings);
+    const customer = buildCustomerReceiptHtml(o, settings);
+    expect(kitchen.indexOf("MUSA CAFE")).toBeLessThan(kitchen.indexOf("03095997786"));
+    expect(customer.indexOf("MUSA CAFE")).toBeLessThan(
+      customer.indexOf("03095997786"),
+    );
     expect(kitchen).toContain("Order #12");
-    expect(kitchen).toContain("TABLE 3,");
     expect(customer).toContain("Order #12");
-    expect(customer).toContain("Thank you!");
-    expect(customer).toContain("03095997786");
+    expect(kitchen).toContain(" · ");
+    expect(customer).toContain(" · ");
   });
 
-  it("custom layout can hide phone and move thank you", () => {
-    const layout = defaultReceiptLayout();
+  it("Default button layout restores preferred print", () => {
+    const html = buildCustomerReceiptHtml(order(), {
+      ...settings,
+      receipt_layout: serializeReceiptLayout(defaultReceiptLayout()),
+    } as never);
+    expect(html).toContain("03095997786");
+    expect(html).toMatch(/03095997786[\s\S]*? · /);
+  });
+
+  it("custom layout can hide phone", () => {
+    const layout = cashierReceiptLayout();
     layout.customer = layout.customer.map((b) =>
-      b.type === "phone_datetime" ? { ...b, visible: false } : b,
+      b.type === "phone" ? { ...b, visible: false } : b,
     );
     const html = buildCustomerReceiptHtml(order(), {
-      id: "s",
-      created_at: "",
-      updated_at: "",
-      restaurant_name: "MUSA CAFE",
-      phone: "03095997786",
-      currency: "Rs",
+      ...settings,
       receipt_layout: serializeReceiptLayout(layout),
     } as never);
     expect(html).not.toContain("03095997786");

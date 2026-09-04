@@ -531,7 +531,7 @@ export function buildKitchenReceiptHtml(
           return styledBlock(
             block,
             "meta",
-            `<div>Bill Date : ${escapeHtml(date)} ${escapeHtml(time)}</div>`,
+            `${escapeHtml(date)} · ${escapeHtml(time)}`,
           );
         case "phone":
           return shopPhone
