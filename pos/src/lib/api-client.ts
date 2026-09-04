@@ -18,6 +18,15 @@ export class ApiError extends Error {
   }
 }
 
+export type ApiFetchOptions = {
+  /** Ignore circuit-breaker / navigator gate — always attempt the request. */
+  bypassCircuitBreaker?: boolean;
+  /** Override default interactive timeout (ms). */
+  timeoutMs?: number;
+  /** On failure, do not escalate the long POS cooldown (login retries). */
+  softFail?: boolean;
+};
+
 function getToken() {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(TOKEN_KEY);
@@ -43,9 +52,11 @@ export async function apiFetch<T>(
   path: string,
   options: RequestInit = {},
   auth = true,
+  fetchOpts?: ApiFetchOptions,
 ): Promise<T> {
   // Circuit breaker: skip network entirely while API is known dead.
-  if (!isOnline()) {
+  // Login / critical auth must bypass — shop Wi‑Fi falsely reports offline often.
+  if (!fetchOpts?.bypassCircuitBreaker && !isOnline()) {
     throw new ApiError("Network unavailable", 0);
   }
 
@@ -60,7 +71,7 @@ export async function apiFetch<T>(
 
   const url = `${API_URL}${path}`;
   const controller = new AbortController();
-  const timeoutMs = apiTimeoutMs();
+  const timeoutMs = fetchOpts?.timeoutMs ?? apiTimeoutMs();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   let res: Response;
@@ -71,7 +82,9 @@ export async function apiFetch<T>(
       signal: controller.signal,
     });
   } catch (err) {
-    markUnreachable();
+    if (!fetchOpts?.softFail) {
+      markUnreachable();
+    }
     if (err instanceof DOMException && err.name === "AbortError") {
       throw new ApiError("Request timed out", 0);
     }
@@ -90,7 +103,10 @@ export async function apiFetch<T>(
       }
     }
     // Server errors that usually mean the host is sick — cool down.
-    if ([408, 429, 502, 503, 504].includes(res.status)) {
+    if (
+      !fetchOpts?.softFail &&
+      [408, 429, 502, 503, 504].includes(res.status)
+    ) {
       markUnreachable();
     }
     throw new ApiError(

@@ -11,10 +11,14 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { setToken } from "@/lib/api-client";
 import { TOKEN_KEY, isTokenExpired, isOfflineSessionValid } from "@/lib/utils";
-import { isOnline, clearForcedOffline } from "@/lib/network";
+import {
+  clearForcedOffline,
+  isBrowserOnline,
+  isOnline,
+} from "@/lib/network";
 import { authApi, sessionRepo, syncKrunchiesMenu } from "@/services/api";
 import { shop } from "@/lib/shop";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 const schema = z.object({
   username: z.string().min(1, "Username required"),
@@ -23,6 +27,19 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+/** Chrome autofill often fills the DOM without notifying react-hook-form. */
+function readLoginFields(
+  form: HTMLFormElement | null,
+  values: FormValues,
+): FormValues {
+  const fd = form ? new FormData(form) : null;
+  const username = String(
+    fd?.get("username") ?? values.username ?? "",
+  ).trim();
+  const password = String(fd?.get("password") ?? values.password ?? "");
+  return { username, password };
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [offline, setOffline] = useState(false);
@@ -30,6 +47,7 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -37,10 +55,32 @@ export default function LoginPage() {
   });
 
   useEffect(() => {
-    setOffline(!isOnline());
+    // Landing on login must not inherit a stale "API dead" cooldown from logout.
+    clearForcedOffline();
+    setOffline(!isBrowserOnline());
     const sync = () => setOffline(!navigator.onLine);
     window.addEventListener("online", sync);
     window.addEventListener("offline", sync);
+
+    const syncAutofill = () => {
+      const userEl = document.getElementById(
+        "username",
+      ) as HTMLInputElement | null;
+      const passEl = document.getElementById(
+        "password",
+      ) as HTMLInputElement | null;
+      if (userEl?.value) {
+        setValue("username", userEl.value, { shouldValidate: true });
+      }
+      if (passEl?.value) {
+        setValue("password", passEl.value, { shouldValidate: true });
+      }
+    };
+    // Autofill often lands after first paint.
+    const t1 = window.setTimeout(syncAutofill, 50);
+    const t2 = window.setTimeout(syncAutofill, 400);
+    const t3 = window.setTimeout(syncAutofill, 1000);
+    window.addEventListener("focusin", syncAutofill);
 
     (async () => {
       const token = localStorage.getItem(TOKEN_KEY);
@@ -63,10 +103,14 @@ export default function LoginPage() {
     })();
 
     return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.clearTimeout(t3);
       window.removeEventListener("online", sync);
       window.removeEventListener("offline", sync);
+      window.removeEventListener("focusin", syncAutofill);
     };
-  }, [router]);
+  }, [router, setValue]);
 
   const continueOffline = async () => {
     const session = await sessionRepo.get();
@@ -80,45 +124,75 @@ export default function LoginPage() {
     router.replace("/orders/new");
   };
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (values: FormValues, event?: FormEvent) => {
     clearForcedOffline();
-    if (!isOnline()) {
-      if (canContinueOffline) {
+    const form =
+      event?.currentTarget instanceof HTMLFormElement
+        ? event.currentTarget
+        : null;
+    const creds = readLoginFields(form, values);
+    if (!creds.username || !creds.password) {
+      toast.error("Username and password required");
+      return;
+    }
+
+    // Always attempt login — do not trust navigator.onLine / circuit breaker.
+    // Shop Wi‑Fi often says offline while the API is reachable.
+    try {
+      const data = await authApi.login(creds);
+      setToken(data.token);
+      toast.success("Logged in");
+      router.replace("/orders/new");
+
+      // Heavy work after navigation — never block the cashier on menu sync.
+      void (async () => {
+        try {
+          await syncKrunchiesMenu();
+        } catch {
+          /* sync engine / next login will retry */
+        }
+        try {
+          const { hydrateDailyNumberFromServer } = await import(
+            "@/lib/daily-order-number"
+          );
+          const { karachiYmd } = await import("@/lib/local-sales");
+          await hydrateDailyNumberFromServer(karachiYmd(), { force: true });
+        } catch {
+          /* ignore */
+        }
+      })();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Login failed";
+      if (
+        canContinueOffline &&
+        (/timed out|unavailable|network/i.test(msg) || !isOnline())
+      ) {
+        toast.message("Server unreachable — continuing offline");
         await continueOffline();
         return;
       }
-      toast.error("Login requires internet.");
-      return;
-    }
-    try {
-      const data = await authApi.login(values);
-      setToken(data.token);
-      try {
-        await syncKrunchiesMenu();
-      } catch {
-        toast.warning("Logged in, but menu sync will retry on the next login.");
-      }
-      try {
-        const { hydrateDailyNumberFromServer } = await import(
-          "@/lib/daily-order-number"
+      if (/timed out/i.test(msg)) {
+        toast.error(
+          "Login timed out — check Wi‑Fi / API, then tap Sign In again",
         );
-        const { karachiYmd } = await import("@/lib/local-sales");
-        await hydrateDailyNumberFromServer(karachiYmd(), { force: true });
-      } catch {
-        /* counter will catch up from local tickets / next allocate */
+        return;
       }
-      toast.success("Logged in");
-      router.replace("/orders/new");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Login failed");
+      if (/unavailable|network/i.test(msg) && !isBrowserOnline()) {
+        toast.error("Login requires internet.");
+        return;
+      }
+      toast.error(msg);
     }
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-black px-4">
       <form
-        onSubmit={handleSubmit(onSubmit)}
+        onSubmit={handleSubmit((values, e) =>
+          onSubmit(values, e as FormEvent | undefined),
+        )}
         className="w-full max-w-md space-y-5 rounded-2xl border border-zinc-800 bg-zinc-950 p-8"
+        autoComplete="on"
       >
         <div>
           <h1 className="text-3xl font-black text-white">
@@ -134,14 +208,23 @@ export default function LoginPage() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="username">Username</Label>
-          <Input id="username" autoFocus {...register("username")} />
+          <Input
+            id="username"
+            autoComplete="username"
+            autoFocus
+            {...register("username")}
+          />
           {errors.username && (
             <p className="text-sm text-red-400">{errors.username.message}</p>
           )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>
-          <PasswordInput id="password" {...register("password")} />
+          <PasswordInput
+            id="password"
+            autoComplete="current-password"
+            {...register("password")}
+          />
           {errors.password && (
             <p className="text-sm text-red-400">{errors.password.message}</p>
           )}

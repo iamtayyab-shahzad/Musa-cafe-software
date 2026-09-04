@@ -90,16 +90,37 @@ export {
 
 export const authApi = {
   login: async (input: StaffLoginInput) => {
-    const data = await apiFetch<{ token: string }>(
-      "/auth/staff/login",
-      {
-        method: "POST",
-        body: JSON.stringify(input),
-      },
-      false,
-    );
-    await sessionRepo.cacheFromToken(input.username, data.token);
-    return data;
+    const attempt = () =>
+      apiFetch<{ token: string }>(
+        "/auth/staff/login",
+        {
+          method: "POST",
+          body: JSON.stringify(input),
+        },
+        false,
+        {
+          // Never block login on the POS circuit breaker / false offline flag.
+          bypassCircuitBreaker: true,
+          // Shop Wi‑Fi is slow — give login a real chance.
+          timeoutMs: 30_000,
+          // Failed attempt must not lock the next Sign In behind a 45s–3min cooldown.
+          softFail: true,
+        },
+      );
+
+    try {
+      const data = await attempt();
+      await sessionRepo.cacheFromToken(input.username, data.token);
+      return data;
+    } catch (err) {
+      // One automatic retry after a brief pause (cold API / flaky Wi‑Fi).
+      const msg = err instanceof Error ? err.message : "";
+      if (!/timed out|unavailable|network/i.test(msg)) throw err;
+      await new Promise((r) => setTimeout(r, 700));
+      const data = await attempt();
+      await sessionRepo.cacheFromToken(input.username, data.token);
+      return data;
+    }
   },
 };
 
