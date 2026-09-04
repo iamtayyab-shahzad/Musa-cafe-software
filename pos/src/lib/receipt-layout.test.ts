@@ -94,8 +94,10 @@ describe("receipt layout", () => {
     );
     expect(kitchen).toContain("Order #12");
     expect(customer).toContain("Order #12");
-    expect(kitchen).toContain(" · ");
-    expect(customer).toContain(" · ");
+    expect(kitchen).toContain("TOTAL");
+    expect(customer).toContain("TOTAL");
+    expect(kitchen).toContain("TABLE 3");
+    expect(kitchen).not.toContain("TABLE 3,");
   });
 
   it("Default button layout restores preferred print", () => {

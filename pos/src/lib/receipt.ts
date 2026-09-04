@@ -7,6 +7,8 @@ import { krunchiesProducts } from "@/data/krunchies";
 import { publicSiteHost, shop } from "@/lib/shop";
 import {
   blockInlineStyle,
+  cashierReceiptLayout,
+  layoutsEqual,
   parseReceiptLayout,
   type ReceiptBlock,
 } from "@/lib/receipt-layout";
@@ -28,6 +30,29 @@ function escapeHtml(value: string) {
 
 function styledBlock(block: ReceiptBlock, className: string, inner: string) {
   return `<div class="${className}" style="${blockInlineStyle(block)}">${inner}</div>`;
+}
+
+/** Temporary cashier mode (empty layout / cashier preset). Default restores preferred print. */
+function isCashierPrintMode(settings: Settings | null | undefined): boolean {
+  return layoutsEqual(
+    parseReceiptLayout(settings?.receipt_layout),
+    cashierReceiptLayout(),
+  );
+}
+
+function dealContentsHtml(item: OrderItem, showDetails: boolean) {
+  if (!showDetails) return "";
+  const name = itemName(item);
+  const desc =
+    item.product?.description ||
+    (item as { product_description?: string }).product_description ||
+    "";
+  if (!isDealLineName(name) && !isDealLineName(desc)) return "";
+  const included = parseDealIncludedItems(desc);
+  if (!included.length) return "";
+  return `<div class="inc">${included
+    .map((line) => `<div>- ${escapeHtml(line)}</div>`)
+    .join("")}</div>`;
 }
 
 function stripPrintScripts(html: string) {
@@ -399,24 +424,14 @@ export function ensureReceiptItemNames(
   };
 }
 
-function dealContentsHtml(item: OrderItem) {
-  const name = itemName(item);
-  const desc =
-    item.product?.description ||
-    (item as { product_description?: string }).product_description ||
-    "";
-  if (!isDealLineName(name) && !isDealLineName(desc)) return "";
-  const included = parseDealIncludedItems(desc);
-  if (!included.length) return "";
-  return `<div class="inc">${included
-    .map((line) => `<div>- ${escapeHtml(line)}</div>`)
-    .join("")}</div>`;
-}
-
 export function buildKitchenReceiptHtml(
   order: Order,
   settings: Settings | null = null,
 ) {
+  // Cashier temp: print the customer receipt for kitchen too (identical slip).
+  if (isCashierPrintMode(settings)) {
+    return buildCustomerReceiptHtml(order, settings);
+  }
   const when = new Date(order.created_at || Date.now());
   const date = when.toLocaleDateString("en-GB", {
     day: "2-digit",
@@ -466,7 +481,7 @@ export function buildKitchenReceiptHtml(
         <td class="col-item">
           <div class="name">${escapeHtml(itemName(item))}</div>
           ${sizeHtml}
-          ${dealContentsHtml(item)}
+          ${dealContentsHtml(item, true)}
           ${mods}
         </td>
         <td class="col-qty">${item.quantity}</td>
@@ -747,7 +762,10 @@ export function buildOneClickReceiptsHtml(
 ): string {
   const named = ensureReceiptItemNames(order);
   const completed = { ...named, order_status: "COMPLETED" as const };
-  const kitchen = buildKitchenReceiptHtml(named, settings);
+  // Cashier temp: two identical customer slips.
+  const kitchen = isCashierPrintMode(settings)
+    ? buildCustomerReceiptHtml(completed, settings)
+    : buildKitchenReceiptHtml(named, settings);
   const customer = buildCustomerReceiptHtml(completed, settings);
   const kitchenCss = extractHtmlPart(kitchen, "style");
   const customerCss = extractHtmlPart(customer, "style");
@@ -790,6 +808,7 @@ export function buildCustomerReceiptHtml(
   reprint = false,
 ) {
   const currency = settings?.currency || "Rs";
+  const showDealDetails = !isCashierPrintMode(settings);
   const when = new Date(order.created_at || Date.now());
   const lines = (order.items || [])
     .map((item) => {
@@ -808,7 +827,7 @@ export function buildCustomerReceiptHtml(
       const noteHtml = extras
         ? `<div class="note">${escapeHtml(extras)}</div>`
         : "";
-      const included = dealContentsHtml(item);
+      const included = dealContentsHtml(item, showDealDetails);
       const title = size ? `${name} (${size})` : name;
       return `
       <tr>

@@ -6,7 +6,35 @@ import {
   ensureReceiptItemNames,
 } from "./receipt";
 import { parseDealIncludedItems } from "./deal-flavors";
-import type { Order, OrderItem } from "../types";
+import {
+  defaultReceiptLayout,
+  serializeReceiptLayout,
+} from "./receipt-layout";
+import type { Order, OrderItem, Settings } from "../types";
+
+/** Preferred Default layout (not temporary cashier mode). */
+function preferredSettings(
+  extra: Partial<Settings> = {},
+): Settings {
+  return {
+    id: "settings",
+    created_at: "",
+    updated_at: "",
+    restaurant_name: "Musa Cafe",
+    phone: "",
+    whatsapp: "",
+    logo: "",
+    opening_time: "",
+    closing_time: "",
+    cash_on_delivery_fee: 0,
+    currency: "Rs",
+    google_maps: "",
+    facebook: "",
+    instagram: "",
+    receipt_layout: serializeReceiptLayout(defaultReceiptLayout()),
+    ...extra,
+  };
+}
 
 function baseOrder(items: OrderItem[]): Order {
   return {
@@ -162,8 +190,8 @@ describe("kitchen ticket layout", () => {
         order_notes: "SERVICE:DINE_IN | TABLE:7",
       },
     );
-    const kitchen = buildKitchenReceiptHtml(order);
-    const customer = buildCustomerReceiptHtml(order, null);
+    const kitchen = buildKitchenReceiptHtml(order, preferredSettings());
+    const customer = buildCustomerReceiptHtml(order, preferredSettings());
     expect(kitchen).toContain("TABLE 7, Dine In");
     expect(kitchen).not.toContain("Ticket No");
     expect(kitchen).not.toContain("Walk-in Customer");
@@ -205,8 +233,8 @@ describe("kitchen ticket layout", () => {
         order_notes: "SERVICE:DINE_IN | TABLE:7",
       },
     );
-    const kitchen = buildKitchenReceiptHtml(order);
-    const customer = buildCustomerReceiptHtml(order, null);
+    const kitchen = buildKitchenReceiptHtml(order, preferredSettings());
+    const customer = buildCustomerReceiptHtml(order, preferredSettings());
     expect(kitchen).toContain("Order #12");
     expect(kitchen).toContain("daily-big");
     expect(kitchen).not.toContain('<span class="lbl">ORDER</span>');
@@ -235,15 +263,42 @@ describe("kitchen ticket layout", () => {
         order_notes: "SERVICE:DINE_IN | TABLE:1",
       },
     );
-    const html = buildOneClickReceiptsHtml(order, null);
-    expect(html).toContain("Thank you!");
+    const html = buildOneClickReceiptsHtml(order, preferredSettings());
+    expect(html).toContain("Kitchen Order Ticket");
     expect(html).toContain("TOTAL");
     expect(html).toContain('class="ticket"');
     expect(html).toContain("page-break-after: always");
     expect(html).toContain("Order #3");
     expect(html).toContain("TABLE 1");
-    // Temporary cashier layout: both tickets share the same header style.
+  });
+
+  it("cashier one-click prints two identical customer slips", () => {
+    const order = ensureReceiptItemNames(
+      {
+        ...baseOrder([
+          {
+            id: "i1",
+            created_at: "",
+            updated_at: "",
+            order_id: "ord-1",
+            product_id: "p1",
+            product_size_id: "s1",
+            quantity: 1,
+            price: 100,
+            product_name: "Zinger Burger",
+          },
+        ]),
+        daily_number: 3,
+        order_notes: "SERVICE:DINE_IN | TABLE:1",
+      },
+    );
+    const html = buildOneClickReceiptsHtml(order, null);
     expect(html).not.toContain("Kitchen Order Ticket");
+    expect(html).toContain("TOTAL");
+    expect(html).toContain('class="ticket"');
+    expect(html).toContain("Order #3");
+    expect(html).toContain("TABLE 1");
+    expect(html).not.toContain("Dine In");
   });
 
   it("prints Parcel for walk-in parcel service mode", () => {
@@ -265,7 +320,7 @@ describe("kitchen ticket layout", () => {
         order_notes: "SERVICE:PARCEL",
       },
     );
-    const kitchen = buildKitchenReceiptHtml(order);
+    const kitchen = buildKitchenReceiptHtml(order, preferredSettings());
     expect(kitchen).toContain("Parcel");
     expect(kitchen).not.toContain("TABLE ");
   });
@@ -287,7 +342,7 @@ describe("kitchen ticket layout", () => {
         },
       ]),
     );
-    const html = buildKitchenReceiptHtml(order);
+    const html = buildKitchenReceiptHtml(order, preferredSettings());
     expect(html).toContain("Item");
     expect(html).toContain("Qty");
     expect(html).toMatch(
@@ -335,14 +390,14 @@ describe("kitchen ticket layout", () => {
         },
       ]),
     );
-    const pizzaHtml = buildCustomerReceiptHtml(pizza, null);
-    const shakeHtml = buildCustomerReceiptHtml(shake, null);
+    const pizzaHtml = buildCustomerReceiptHtml(pizza, preferredSettings());
+    const shakeHtml = buildCustomerReceiptHtml(shake, preferredSettings());
     expect(pizzaHtml).toContain("Chicken Tika (L)");
     expect(shakeHtml).toContain("Mango Shake");
     expect(shakeHtml).not.toContain("(Regular)");
   });
 
-  it("lists items included in a deal", () => {
+  it("lists items included in a deal on Default layout", () => {
     const order = ensureReceiptItemNames(
       baseOrder([
         {
@@ -361,19 +416,51 @@ describe("kitchen ticket layout", () => {
         },
       ]),
     );
-    const kitchen = buildKitchenReceiptHtml(order);
+    const kitchen = buildKitchenReceiptHtml(order, preferredSettings());
     expect(kitchen).toContain("1 Zinger Burger");
     expect(kitchen).toContain("5 Hot Wings");
     expect(kitchen).toContain("1 Regular Drink");
-    const customer = buildCustomerReceiptHtml(order, null);
+    const customer = buildCustomerReceiptHtml(order, preferredSettings());
     expect(customer).toContain("1 Zinger Burger");
     expect(customer).not.toContain("www.krunchies.pk");
     expect(customer).toContain("Musa Cafe");
     expect(customer).toContain("Staff notes:");
-    expect(customer).toContain("font-weight: 600"); // shop name matches kitchen
+    expect(customer).toContain("font-weight: 600");
     expect(customer).not.toContain("font-weight: 800");
     expect(customer).not.toContain("Order:");
     expect(customer).not.toContain("Walk-in Customer");
+  });
+
+  it("cashier mode hides deal contents and matches kitchen to customer", () => {
+    const order = ensureReceiptItemNames(
+      baseOrder([
+        {
+          id: "i1",
+          created_at: "",
+          updated_at: "",
+          order_id: "ord-1",
+          product_id: "20000000-0000-4000-8000-000000000090",
+          product_size_id: "s1",
+          quantity: 1,
+          price: 699,
+          product_name: "Deal 1",
+          product_description:
+            "1 Zinger Burger, 5 Hot Wings and 1 Regular Drink.",
+          size: "Deal",
+        },
+      ]),
+    );
+    const kitchen = buildKitchenReceiptHtml(order, null);
+    const customer = buildCustomerReceiptHtml(order, null);
+    expect(kitchen).toContain("Deal 1");
+    expect(customer).toContain("Deal 1");
+    expect(kitchen).not.toContain("1 Zinger Burger");
+    expect(customer).not.toContain("5 Hot Wings");
+    expect(kitchen).toContain("TOTAL");
+    expect(kitchen).toContain("Payment:");
+    const body = (html: string) =>
+      html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1]?.trim() || "";
+    expect(body(kitchen)).toBe(body(customer));
   });
 });
 
