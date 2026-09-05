@@ -707,15 +707,27 @@ export async function replaceOrdersPreservingUnsynced(serverOrders: Order[]) {
       s.client_order_id || loc?.client_order_id || loc?.id || undefined;
     if (
       loc &&
-      (loc.sync_status === "pending_sync" || loc.sync_status === "sync_failed") &&
-      (loc.order_status === "COMPLETED" || loc.order_status === "CANCELLED")
+      (loc.sync_status === "pending_sync" || loc.sync_status === "sync_failed")
     ) {
+      // Local cashier edit/complete wins over a stale server snapshot.
       byId.set(s.id, {
         ...s,
         client_order_id: clientOrderId,
         created_at: createdAt,
         order_status: loc.order_status,
         sync_status: loc.sync_status,
+        items: loc.items?.length ? loc.items : s.items,
+        subtotal: loc.subtotal,
+        discount: loc.discount,
+        grand_total: loc.grand_total,
+        delivery_charge: loc.delivery_charge,
+        cash_on_delivery_fee: loc.cash_on_delivery_fee,
+        customer_name: loc.customer_name,
+        phone: loc.phone,
+        address: loc.address,
+        location_id: loc.location_id,
+        payment_method: loc.payment_method,
+        order_notes: loc.order_notes,
       });
     } else {
       byId.set(s.id, {
@@ -802,6 +814,24 @@ export async function mergeOrders(orders: Order[]) {
               previous.created_at,
               incoming.created_at,
             ),
+            // Unsynced local edits must not lose items/totals to a stale pull.
+            ...((previous.sync_status === "pending_sync" ||
+              previous.sync_status === "sync_failed") && {
+              order_status: previous.order_status,
+              sync_status: previous.sync_status,
+              items: previous.items?.length ? previous.items : incoming.items,
+              subtotal: previous.subtotal,
+              discount: previous.discount,
+              grand_total: previous.grand_total,
+              delivery_charge: previous.delivery_charge,
+              cash_on_delivery_fee: previous.cash_on_delivery_fee,
+              customer_name: previous.customer_name,
+              phone: previous.phone,
+              address: previous.address,
+              location_id: previous.location_id,
+              payment_method: previous.payment_method,
+              order_notes: previous.order_notes,
+            }),
           }
         : incoming,
     );

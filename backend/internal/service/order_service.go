@@ -390,7 +390,15 @@ func (s *OrderService) UpdateOrder(id uuid.UUID, input dto.UpdateOrderRequest) e
 		tx.Rollback()
 		return err
 	}
-	if current.OrderStatus != "PENDING" {
+
+	var setting domain.Setting
+	_ = tx.Order("created_at asc").First(&setting).Error
+
+	if current.OrderStatus == "PENDING" {
+		// normal edits
+	} else if current.OrderStatus == "COMPLETED" && setting.PosAllowHistoryEdit {
+		// POS history edit: allow item/metadata changes on completed tickets
+	} else {
 		tx.Rollback()
 		return utils.NewAppError(http.StatusConflict, "only pending orders can be edited")
 	}
@@ -417,8 +425,6 @@ func (s *OrderService) UpdateOrder(id uuid.UUID, input dto.UpdateOrderRequest) e
 		return err
 	}
 
-	var setting domain.Setting
-	_ = tx.Order("created_at asc").First(&setting).Error
 	codFee := 0
 	if method == "cod" {
 		codFee = setting.CashOnDeliveryFee

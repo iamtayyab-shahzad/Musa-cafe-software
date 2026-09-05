@@ -175,8 +175,8 @@ function isObsoleteOrderUpdateError(err: unknown) {
 /**
  * Drop queue items that cannot (and must not) change the server anymore.
  * Safe: only clears CREATE when local→server id is already known, UPDATE when
- * the order is already COMPLETED/CANCELLED locally, and duplicate CREATEs.
- * Real unsynced sales are kept.
+ * the order is already COMPLETED/CANCELLED locally *and* not mid-edit
+ * (pending_sync), and duplicate CREATEs. Real unsynced sales/edits are kept.
  */
 export async function clearObsoleteOrderQueue(): Promise<number> {
   const [pending, dead, locals] = await Promise.all([
@@ -278,7 +278,9 @@ export async function clearObsoleteOrderQueue(): Promise<number> {
       if (
         local &&
         (local.order_status === "COMPLETED" ||
-          local.order_status === "CANCELLED")
+          local.order_status === "CANCELLED") &&
+        local.sync_status !== "pending_sync" &&
+        local.sync_status !== "sync_failed"
       ) {
         await markClear(action.id);
         continue;
@@ -862,16 +864,38 @@ async function processAction(
       );
       if (waiting) return "skip";
       const serverId = await resolveOrderId(p.id);
+      const markLocalSynced = async () => {
+        const locals = await listLocalOrders();
+        const local =
+          locals.find((o) => o.id === serverId) ||
+          locals.find((o) => o.id === p.id) ||
+          locals.find((o) => o.client_order_id === p.id);
+        if (local) {
+          await upsertLocalOrder({
+            ...local,
+            sync_status: "synced",
+            updated_at: new Date().toISOString(),
+          });
+        }
+      };
       try {
         await apiFetch(`/orders/${serverId}`, {
           method: "PUT",
           body: JSON.stringify(p.updates),
         });
       } catch (err) {
-        // Completed/cancelled tickets cannot be edited — drop the stale update.
-        if (isObsoleteOrderUpdateError(err)) return "ok";
+        // Completed/cancelled tickets cannot be edited — drop the stale update
+        // and clear pending_sync so the next pull can restore server truth.
+        if (isObsoleteOrderUpdateError(err)) {
+          await markLocalSynced();
+          notifyOrdersChanged();
+          return "ok";
+        }
         throw err;
       }
+      // Keep local edited lines/totals; only clear the pending_sync flag.
+      await markLocalSynced();
+      notifyOrdersChanged();
       return "ok";
     }
     default:

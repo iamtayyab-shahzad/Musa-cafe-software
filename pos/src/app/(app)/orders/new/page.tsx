@@ -612,6 +612,14 @@ export default function NewOrderPage() {
           qc.setQueryData<Order[]>(["orders", "pending"], (old) =>
             (old || []).filter((o) => !ordersShareIdentity(o, printable)),
           );
+          // Keep history + today's sales on the new totals immediately.
+          qc.setQueryData<Order[]>(["orders"], (old) => {
+            const list = old || [];
+            const without = list.filter(
+              (o) => !ordersShareIdentity(o, printable),
+            );
+            return [printable, ...without];
+          });
         }
 
         if (draftId) void deleteDraft(draftId);
@@ -641,7 +649,9 @@ export default function NewOrderPage() {
             cash_on_delivery_fee: printable.cash_on_delivery_fee,
             grand_total: printable.grand_total,
           });
-          if (effectiveStatus === "COMPLETED") {
+          // History edit of an already-completed order: push item changes only.
+          // Re-complete would only add queue noise and sync races.
+          if (effectiveStatus === "COMPLETED" && !editingCompleted) {
             try {
               await ordersApi.complete(editingOrderId);
             } catch {
@@ -658,6 +668,7 @@ export default function NewOrderPage() {
               business_date: businessDate,
             },
             orderType,
+            { completeImmediately: effectiveStatus === "COMPLETED" },
           );
           if (effectiveStatus === "COMPLETED") {
             await ordersApi.complete(created.id);

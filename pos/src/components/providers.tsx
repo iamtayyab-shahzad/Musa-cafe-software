@@ -42,12 +42,17 @@ function ThemedToaster() {
   );
 }
 
+let hydrateOrdersGen = 0;
+
 async function hydrateOrdersFromIdb(client: QueryClient) {
+  const gen = ++hydrateOrdersGen;
   try {
     const [pending, all] = await Promise.all([
       listLocalPendingOrders(),
       listLocalOrders(),
     ]);
+    // Drop superseded hydrates so a slow PENDING read cannot overwrite COMPLETED.
+    if (gen !== hydrateOrdersGen) return;
     client.setQueryData(["orders", "pending"], pending);
     client.setQueryData(["orders"], all);
   } catch {

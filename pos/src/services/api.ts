@@ -583,6 +583,7 @@ async function buildLocalOrder(
   input: CreateOrderInput,
   orderType: string,
   clientOrderId: string,
+  opts?: { orderStatus?: "PENDING" | "COMPLETED" },
 ): Promise<Order> {
   const id = clientOrderId;
   const now = new Date().toISOString();
@@ -667,7 +668,7 @@ async function buildLocalOrder(
     delivery_charge,
     cash_on_delivery_fee,
     payment_method: input.payment_method,
-    order_status: "PENDING",
+    order_status: opts?.orderStatus === "COMPLETED" ? "COMPLETED" : "PENDING",
     order_type: orderType,
     order_notes: input.order_notes || "",
     subtotal,
@@ -725,6 +726,7 @@ export const ordersApi = {
   create: async (
     input: CreateOrderInput,
     orderType: "walkin" | "phone" | "website" = "walkin",
+    opts?: { completeImmediately?: boolean },
   ) => {
     const clientOrderId = input.client_order_id || crypto.randomUUID();
     const apiInput: CreateOrderInput = {
@@ -747,7 +749,9 @@ export const ordersApi = {
       if (local) return local;
     }
 
-    const local = await buildLocalOrder(input, orderType, clientOrderId);
+    const local = await buildLocalOrder(input, orderType, clientOrderId, {
+      orderStatus: opts?.completeImmediately ? "COMPLETED" : "PENDING",
+    });
     const queuedInput: CreateOrderInput = {
       ...apiInput,
       created_at: local.created_at,
