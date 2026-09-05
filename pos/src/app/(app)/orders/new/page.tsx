@@ -1036,7 +1036,9 @@ export default function NewOrderPage() {
           </button>
           {categories
             .filter((c) => c.visible)
-            .sort((a, b) => a.display_order - b.display_order)
+            .sort((a, b) =>
+              a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+            )
             .map((c) => (
               <button
                 key={c.id}

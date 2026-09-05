@@ -653,6 +653,8 @@ export function buildKitchenReceiptHtml(
     font-weight: 600;
     font-size: 12px;
     padding: 3px 0;
+    border-top: 1px solid #444;
+    border-bottom: 1px solid #444;
   }
   tbody td {
     padding: 4px 0;
@@ -1063,6 +1065,8 @@ export function buildCustomerReceiptHtml(
     font-weight: 600;
     font-size: 12px;
     padding: 3px 1px 4px 0;
+    border-top: 1px solid #444;
+    border-bottom: 1px solid #444;
   }
   tbody td {
     padding: 4px 1px 4px 0;
@@ -1099,7 +1103,8 @@ export function buildCustomerReceiptHtml(
   .inc { padding-left: 4px; }
   .total {
     margin-top: 5px;
-    padding: 4px 0;
+    padding: 4px 0 0;
+    border-top: 1px solid #444;
     font-size: 12px;
     font-weight: 400;
   }
