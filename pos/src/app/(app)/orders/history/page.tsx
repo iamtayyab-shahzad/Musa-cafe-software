@@ -281,6 +281,12 @@ export default function OrderHistoryPage() {
         </Button>
         <Input
           className="max-w-sm"
+          name="order-history-search"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
+          data-1p-ignore="true"
+          data-lpignore="true"
           placeholder="Search #12, name, phone, product…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -390,7 +396,14 @@ export default function OrderHistoryPage() {
       <CancelOrderPasswordDialog
         open={Boolean(cancelTarget)}
         onOpenChange={(open) => {
-          if (!open) setCancelTarget(null);
+          if (!open) {
+            setCancelTarget(null);
+            // Browser password managers sometimes dump the POS username into
+            // the history search when the cancel password field opens.
+            setQ((prev) =>
+              prev.trim().toLowerCase() === "staff" ? "" : prev,
+            );
+          }
         }}
         onConfirm={() => {
           if (cancelTarget) void cancel(cancelTarget);

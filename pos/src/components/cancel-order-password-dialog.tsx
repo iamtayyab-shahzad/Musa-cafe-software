@@ -8,8 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 
 /** Shop rule: cancel-order requires this password so a cashier cannot void a paid ticket. */
 export const CANCEL_ORDER_PASSWORD = "cancel";
@@ -55,10 +55,25 @@ export function CancelOrderPasswordDialog({
         </p>
         <div className="space-y-2">
           <Label htmlFor="cancel-order-password">Password</Label>
-          <Input
+          {/*
+            Chrome/Edge treat a lone password field as a login form and dump the
+            saved POS username ("staff") into the nearest page text input (Order
+            History search). Absorb that autofill here instead.
+          */}
+          <input
+            type="text"
+            name="username"
+            autoComplete="username"
+            defaultValue=""
+            tabIndex={-1}
+            aria-hidden="true"
+            className="pointer-events-none absolute h-0 w-0 opacity-0"
+          />
+          <PasswordInput
+            key={open ? "open" : "closed"}
             id="cancel-order-password"
-            type="password"
-            autoComplete="off"
+            name="cancel-order-pin"
+            autoComplete="new-password"
             autoFocus
             value={password}
             onChange={(e) => {

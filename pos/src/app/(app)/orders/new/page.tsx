@@ -142,7 +142,7 @@ export default function NewOrderPage() {
   const placeOrderRef = useRef<(status: "COMPLETED" | "PENDING") => void>(
     () => {},
   );
-  /** Last click was on the Current Bill panel — Enter prints instead of adding a product. */
+  /** Bill panel owns Enter (print) only when no product is highlighted. */
   const billPanelActiveRef = useRef(false);
   const isWalkin = bill.orderType === "walkin";
   const paymentOptions = paymentsForOrderType(bill.orderType);
@@ -252,8 +252,28 @@ export default function NewOrderPage() {
       .sort((a, b) => a.display_order - b.display_order);
   }, [productsWithCategories, categoryId, search]);
 
+  const activateMenuMode = useCallback(
+    (opts?: { ensureHighlight?: boolean }) => {
+      billPanelActiveRef.current = false;
+      if (opts?.ensureHighlight) {
+        setKbIndex((prev) => {
+          if (prev >= 0) return prev;
+          return filtered.length ? 0 : -1;
+        });
+      }
+    },
+    [filtered.length],
+  );
+
+  const activateBillMode = useCallback(() => {
+    billPanelActiveRef.current = true;
+    kbIndexRef.current = -1;
+    setKbIndex(-1);
+  }, []);
+
   // Reset highlight to first visible product when search/category changes.
   useEffect(() => {
+    if (billPanelActiveRef.current) return;
     setKbIndex(filtered.length ? 0 : -1);
   }, [search, categoryId, filtered.length]);
 
@@ -776,12 +796,17 @@ export default function NewOrderPage() {
 
   const markKbNav = useCallback(() => {
     hoverGateRef.current.markKeyboard();
-  }, []);
+    activateMenuMode();
+  }, [activateMenuMode]);
 
-  const selectProductIndex = useCallback((index: number) => {
-    if (!hoverGateRef.current.allowHover()) return;
-    setKbIndex(index);
-  }, []);
+  const selectProductIndex = useCallback(
+    (index: number) => {
+      if (!hoverGateRef.current.allowHover()) return;
+      activateMenuMode();
+      setKbIndex(index);
+    },
+    [activateMenuMode],
+  );
 
   const onMenuPointerMove = useCallback(
     (e: ReactMouseEvent<HTMLDivElement>) => {
@@ -860,19 +885,8 @@ export default function NewOrderPage() {
       const inBill = Boolean(
         target?.closest?.("[data-pos-bill-panel='true']"),
       );
-
-      // Table field or Current Bill panel: Enter prints / completes
-      if ((inTable || inBill || billPanelActiveRef.current) && e.key === "Enter") {
-        if (inSearch) {
-          // Search bar still adds products.
-        } else if (isTextEntryTarget(target) && !inTable) {
-          return;
-        } else {
-          e.preventDefault();
-          focusTableOrSavePending();
-          return;
-        }
-      }
+      const menuHighlightActive =
+        kbIndexRef.current >= 0 && kbIndexRef.current < filtered.length;
 
       // Escape while editing: discard local changes, leave server order alone
       if (e.key === "Escape" && bill.editingOrderId && !isTextEntryTarget(target)) {
@@ -891,6 +905,7 @@ export default function NewOrderPage() {
         !isTextEntryTarget(target)
       ) {
         e.preventDefault();
+        activateMenuMode({ ensureHighlight: true });
         focusSearch();
         return;
       }
@@ -902,7 +917,7 @@ export default function NewOrderPage() {
         return;
       }
 
-      // Ctrl+Enter → save pending
+      // Ctrl+Enter → save pending (always print path)
       if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         focusTableOrSavePending();
@@ -930,6 +945,7 @@ export default function NewOrderPage() {
         }
         if (e.key === "Enter") {
           e.preventDefault();
+          activateMenuMode({ ensureHighlight: true });
           addHighlightedProduct();
           return;
         }
@@ -952,7 +968,27 @@ export default function NewOrderPage() {
       }
 
       if (e.key === "Enter") {
+        // Table field always completes / asks for table #.
+        if (inTable) {
+          e.preventDefault();
+          focusTableOrSavePending();
+          return;
+        }
+        // SELECTED product wins — never print while a menu item is highlighted.
+        if (menuHighlightActive) {
+          e.preventDefault();
+          activateMenuMode();
+          addHighlightedProduct();
+          return;
+        }
+        // No product highlight: bill panel / last bill click → print.
+        if (inBill || billPanelActiveRef.current) {
+          e.preventDefault();
+          focusTableOrSavePending();
+          return;
+        }
         e.preventDefault();
+        activateMenuMode({ ensureHighlight: true });
         addHighlightedProduct();
       }
     };
@@ -960,6 +996,7 @@ export default function NewOrderPage() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [
+    activateMenuMode,
     addHighlightedProduct,
     bill.editingOrderId,
     cancelEdit,
@@ -979,7 +1016,7 @@ export default function NewOrderPage() {
       <div
         className="flex min-h-0 flex-col overflow-hidden lg:border-r lg:border-zinc-800"
         onPointerDown={() => {
-          billPanelActiveRef.current = false;
+          activateMenuMode({ ensureHighlight: true });
         }}
       >
         {showMenuLoading ? (
@@ -1008,7 +1045,7 @@ export default function NewOrderPage() {
           <span className="font-semibold text-orange-400/90">Keyboard</span>
           <span>↑↓←→ move (also while searching)</span>
           <span>·</span>
-          <span>Enter add / choose size</span>
+          <span>Enter add (menu) / print (bill)</span>
           <span>·</span>
           <span>/ search</span>
           <span>·</span>
@@ -1090,7 +1127,7 @@ export default function NewOrderPage() {
         data-pos-bill-panel="true"
         className="flex max-h-[50vh] min-h-0 flex-col border-t border-zinc-800 bg-zinc-950 lg:max-h-none lg:border-t-0"
         onPointerDown={() => {
-          billPanelActiveRef.current = true;
+          activateBillMode();
         }}
       >
         <div className="shrink-0 border-b border-zinc-800 px-3 py-2">
