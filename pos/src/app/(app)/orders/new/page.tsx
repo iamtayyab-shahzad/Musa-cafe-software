@@ -781,8 +781,19 @@ export default function NewOrderPage() {
 
   const focusTableOrSavePending = useCallback(() => {
     if (busy) return;
+    // Empty cart + Enter on bill: add the highlighted product (not "Cart is empty").
     if (!bill.items.length) {
-      toast.error("Cart is empty");
+      let idx = kbIndexRef.current;
+      if ((idx < 0 || idx >= filtered.length) && filtered.length > 0) {
+        idx = 0;
+        kbIndexRef.current = 0;
+        setKbIndex(0);
+      }
+      if (idx < 0 || idx >= filtered.length) {
+        toast.message("No product selected — pick a product first");
+        return;
+      }
+      onProductClick(filtered[idx]);
       return;
     }
     if (isWalkin && bill.serviceMode === "dine_in") {
@@ -794,7 +805,15 @@ export default function NewOrderPage() {
       }
     }
     placeOrderRef.current("PENDING");
-  }, [busy, bill.items.length, bill.serviceMode, bill.tableNumber, isWalkin]);
+  }, [
+    busy,
+    bill.items.length,
+    bill.serviceMode,
+    bill.tableNumber,
+    filtered,
+    isWalkin,
+    onProductClick,
+  ]);
 
   // Scroll highlighted tile into view (manual — avoids hover steal)
   useEffect(() => {

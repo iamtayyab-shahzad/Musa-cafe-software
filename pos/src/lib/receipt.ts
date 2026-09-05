@@ -658,7 +658,7 @@ export function buildKitchenReceiptHtml(
     font-size: 13px;
   }
   .col-qty { text-align: right; }
-  .name { white-space: nowrap; overflow: hidden; text-overflow: clip; }
+  .name { white-space: normal; overflow: visible; word-break: break-word; overflow-wrap: anywhere; }
   .size {
     font-weight: 400;
     font-size: 12px;
@@ -877,9 +877,13 @@ export function buildCustomerReceiptHtml(
   const datePart = when.toLocaleDateString("en-PK");
   const timePart = when.toLocaleTimeString("en-PK");
   const tableNo = parseTableNumber(order.order_notes);
+  const cashierSimple = isCashierPrintMode(settings);
   const customerLayout = parseReceiptLayout(settings?.receipt_layout).customer;
+  const printShopName = cashierSimple
+    ? "Musa Cafe & Pizza Hut"
+    : settings?.restaurant_name || shop.name;
 
-  const itemsTable = `<hr />
+  const itemsTable = `${cashierSimple ? "" : "<hr />"}
   <table>
     <colgroup>
       <col class="col-item" />
@@ -896,8 +900,13 @@ export function buildCustomerReceiptHtml(
     <tbody>${lines}</tbody>
   </table>`;
 
+  const showSubtotal = !cashierSimple || discount > 0;
   const totalsHtml = `<div class="total">
-    <div class="line"><span>Subtotal</span><span>${formatPrice(order.subtotal, currency)}</span></div>
+    ${
+      showSubtotal
+        ? `<div class="line"><span>Subtotal</span><span>${formatPrice(order.subtotal, currency)}</span></div>`
+        : ""
+    }
     ${delivery ? `<div class="line"><span>Delivery</span><span>${formatPrice(delivery, currency)}</span></div>` : ""}
     ${cod ? `<div class="line"><span>COD Fee</span><span>${formatPrice(cod, currency)}</span></div>` : ""}
     ${discount ? `<div class="line"><span>Discount</span><span>-${formatPrice(discount, currency)}</span></div>` : ""}
@@ -910,7 +919,7 @@ export function buildCustomerReceiptHtml(
       if (!block.visible) return "";
       switch (block.type) {
         case "shop_name":
-          return `<h1 style="${blockInlineStyle(block)}">${escapeHtml(settings?.restaurant_name || shop.name)}</h1>`;
+          return `<h1 style="${blockInlineStyle(block)}">${escapeHtml(printShopName)}</h1>`;
         case "order_number":
           return order.daily_number && order.daily_number > 0
             ? styledBlock(block, "daily-line", `Order #${order.daily_number}`)
@@ -1069,9 +1078,10 @@ export function buildCustomerReceiptHtml(
     padding-right: 2px !important;
   }
   .name {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: clip;
+    white-space: normal;
+    overflow: visible;
+    word-break: break-word;
+    overflow-wrap: anywhere;
     font-weight: 400;
     font-size: 13px;
   }
@@ -1182,9 +1192,46 @@ export function buildCustomerReceiptHtml(
     margin: 0 0 3px;
     text-transform: uppercase;
   }
+  /* Temporary cashier style — Default layout restores boxed preferred print. */
+  body.cashier-simple h1 {
+    font-size: 14px;
+    letter-spacing: 0.2px;
+    line-height: 1.25;
+  }
+  body.cashier-simple .daily-line,
+  body.cashier-simple .table-line {
+    border: none;
+    padding: 1px 0;
+    margin: 0 0 2px;
+  }
+  body.cashier-simple .total {
+    border: none;
+    padding: 4px 0;
+    margin-top: 4px;
+  }
+  body.cashier-simple .grand {
+    border-top: none;
+    padding-top: 2px;
+    margin-top: 2px;
+  }
+  body.cashier-simple hr,
+  body.cashier-simple .web {
+    border: none;
+  }
+  body.cashier-simple thead td {
+    border: none;
+    border-bottom: none;
+    padding-bottom: 2px;
+  }
+  body.cashier-simple tbody td {
+    border-bottom: none;
+  }
+  body.cashier-simple .write-space {
+    border-top: none;
+  }
 </style>
 </head>
-<body>
+<body class="${cashierSimple ? "cashier-simple" : ""}">
   ${customerBody}
 </body>
 </html>`;

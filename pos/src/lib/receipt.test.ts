@@ -207,7 +207,9 @@ describe("kitchen ticket layout", () => {
     expect(customer).toContain("Musa Cafe");
     expect(customer).toContain("font-weight: 600");
     expect(customer).not.toContain("font-weight: 800");
-    expect(customer).toContain("white-space: nowrap");
+    // Long item names wrap instead of clipping mid-word on narrow paper.
+    expect(customer).toContain("white-space: normal");
+    expect(customer).toContain("overflow-wrap: anywhere");
     // Date · time (and shop phone when settings present) on one meta line
     expect(customer).toMatch(/class="meta"[^>]*>[\s\S]*? · /);
   });
@@ -461,6 +463,41 @@ describe("kitchen ticket layout", () => {
     const body = (html: string) =>
       html.match(/<body[^>]*>([\s\S]*?)<\/body>/i)?.[1]?.trim() || "";
     expect(body(kitchen)).toBe(body(customer));
+  });
+
+  it("cashier simple bill: shop name, wrap names, no borders, subtotal only with discount", () => {
+    const order = ensureReceiptItemNames(
+      baseOrder([
+        {
+          id: "i1",
+          created_at: "",
+          updated_at: "",
+          order_id: "ord-1",
+          product_id: "p1",
+          product_size_id: "s1",
+          quantity: 1,
+          price: 550,
+          product_name: "Oven bakened Pasta with Extra Cheese Topping",
+        },
+      ]),
+    );
+    const customer = buildCustomerReceiptHtml(order, null);
+    expect(customer).toContain("Musa Cafe &amp; Pizza Hut");
+    expect(customer).toContain('class="cashier-simple"');
+    expect(customer).toContain("white-space: normal");
+    expect(customer).toContain("Oven bakened Pasta with Extra Cheese Topping");
+    expect(customer).not.toContain(">Subtotal<");
+    expect(customer).toContain("TOTAL");
+    expect(customer).toContain("body.cashier-simple .daily-line");
+
+    const withDiscount = ensureReceiptItemNames({
+      ...order,
+      discount: 50,
+      grand_total: 500,
+    });
+    const discounted = buildCustomerReceiptHtml(withDiscount, null);
+    expect(discounted).toContain("Subtotal");
+    expect(discounted).toContain("Discount");
   });
 });
 
