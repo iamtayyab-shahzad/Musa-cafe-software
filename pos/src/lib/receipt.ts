@@ -253,6 +253,15 @@ export function kitchenOrderTypeLabel(
   return orderType || "Order";
 }
 
+/** Daily # plus channel hint so phone slips are obvious on kitchen + customer. */
+export function dailyOrderHeading(order: Order): string {
+  const n = order.daily_number;
+  if (!n || n <= 0) return "";
+  const base = `Order #${n}`;
+  if (order.order_type === "phone") return `${base} · Phone Order`;
+  return base;
+}
+
 /** Parse TABLE:xx from order notes (persisted without schema change). */
 export function parseTableNumber(orderNotes?: string | null): string {
   if (!orderNotes) return "";
@@ -520,14 +529,12 @@ export function buildKitchenReceiptHtml(
       switch (block.type) {
         case "shop_name":
           return styledBlock(block, "shop", shopTitle);
-        case "order_number":
-          return order.daily_number && order.daily_number > 0
-            ? styledBlock(
-                block,
-                "daily-big",
-                `Order #${order.daily_number}`,
-              )
+        case "order_number": {
+          const heading = dailyOrderHeading(order);
+          return heading
+            ? styledBlock(block, "daily-big", escapeHtml(heading))
             : "";
+        }
         case "table_service":
           return table
             ? styledBlock(
@@ -625,8 +632,6 @@ export function buildKitchenReceiptHtml(
     text-align: center;
     font-weight: 400;
     font-size: 13px;
-    border-top: 1px solid #000;
-    border-bottom: 1px solid #000;
     padding: 3px 0;
     margin-bottom: 6px;
   }
@@ -647,8 +652,6 @@ export function buildKitchenReceiptHtml(
   thead td {
     font-weight: 600;
     font-size: 12px;
-    border-top: 1px solid #000;
-    border-bottom: 1px solid #000;
     padding: 3px 0;
   }
   tbody td {
@@ -677,8 +680,6 @@ export function buildKitchenReceiptHtml(
   .foot {
     display: flex;
     justify-content: space-between;
-    border-top: 1px solid #000;
-    border-bottom: 1px solid #000;
     padding: 3px 0;
     margin-top: 4px;
     font-size: 12px;
@@ -691,7 +692,6 @@ export function buildKitchenReceiptHtml(
   }
   .write-space {
     margin-top: 8px;
-    border-top: 1px dashed #000;
     padding-top: 4px;
     min-height: 18mm;
     font-size: 11px;
@@ -702,8 +702,7 @@ export function buildKitchenReceiptHtml(
     font-weight: 700;
     line-height: 1.2;
     letter-spacing: 0.4px;
-    border: 1.5px solid #000;
-    padding: 3px 4px;
+    padding: 3px 0;
     margin: 0 0 4px;
     text-transform: uppercase;
   }
@@ -721,8 +720,7 @@ export function buildKitchenReceiptHtml(
     font-weight: 700;
     line-height: 1.2;
     letter-spacing: 0.4px;
-    border: 1.5px solid #000;
-    padding: 3px 4px;
+    padding: 3px 0;
     margin: 0 0 4px;
     text-transform: uppercase;
   }
@@ -883,8 +881,7 @@ export function buildCustomerReceiptHtml(
     ? "Musa Cafe & Pizza Hut"
     : settings?.restaurant_name || shop.name;
 
-  const itemsTable = `${cashierSimple ? "" : "<hr />"}
-  <table>
+  const itemsTable = `<table>
     <colgroup>
       <col class="col-item" />
       <col class="col-qty" />
@@ -920,10 +917,12 @@ export function buildCustomerReceiptHtml(
       switch (block.type) {
         case "shop_name":
           return `<h1 style="${blockInlineStyle(block)}">${escapeHtml(printShopName)}</h1>`;
-        case "order_number":
-          return order.daily_number && order.daily_number > 0
-            ? styledBlock(block, "daily-line", `Order #${order.daily_number}`)
+        case "order_number": {
+          const heading = dailyOrderHeading(order);
+          return heading
+            ? styledBlock(block, "daily-line", escapeHtml(heading))
             : "";
+        }
         case "table":
           return tableNo
             ? styledBlock(
@@ -1048,9 +1047,7 @@ export function buildCustomerReceiptHtml(
     word-break: break-word;
   }
   hr {
-    border: none;
-    border-top: 1px solid #000;
-    margin: 5px 0;
+    display: none;
   }
   table {
     width: 100%;
@@ -1065,14 +1062,12 @@ export function buildCustomerReceiptHtml(
   thead td {
     font-weight: 600;
     font-size: 12px;
-    border-bottom: 1px solid #000;
     padding: 3px 1px 4px 0;
   }
   tbody td {
     padding: 4px 1px 4px 0;
     vertical-align: top;
     font-weight: 400;
-    border-bottom: 1px dashed #999;
   }
   .col-item {
     padding-right: 2px !important;
@@ -1103,9 +1098,8 @@ export function buildCustomerReceiptHtml(
   }
   .inc { padding-left: 4px; }
   .total {
-    border: 1px solid #000;
     margin-top: 5px;
-    padding: 5px 4px;
+    padding: 4px 0;
     font-size: 12px;
     font-weight: 400;
   }
@@ -1123,8 +1117,7 @@ export function buildCustomerReceiptHtml(
     font-size: 13px;
     font-weight: 600;
     margin-top: 4px;
-    padding-top: 3px;
-    border-top: 1px solid #000;
+    padding-top: 2px;
   }
   .notes {
     font-size: 12px;
@@ -1145,7 +1138,6 @@ export function buildCustomerReceiptHtml(
     gap: 3px;
     margin-top: 6px;
     padding-top: 5px;
-    border-top: 1px solid #000;
   }
   .web svg {
     width: 28mm;
@@ -1165,7 +1157,6 @@ export function buildCustomerReceiptHtml(
   }
   .write-space {
     margin-top: 8px;
-    border-top: 1px dashed #000;
     padding-top: 4px;
     min-height: 18mm;
     font-size: 11px;
@@ -1176,8 +1167,7 @@ export function buildCustomerReceiptHtml(
     font-weight: 700;
     line-height: 1.2;
     letter-spacing: 0.4px;
-    border: 1.5px solid #000;
-    padding: 3px 4px;
+    padding: 1px 0;
     margin: 0 0 3px;
     text-transform: uppercase;
   }
@@ -1187,47 +1177,15 @@ export function buildCustomerReceiptHtml(
     font-weight: 700;
     line-height: 1.2;
     letter-spacing: 0.4px;
-    border: 1.5px solid #000;
-    padding: 3px 4px;
+    padding: 1px 0;
     margin: 0 0 3px;
     text-transform: uppercase;
   }
-  /* Temporary cashier style — Default layout restores boxed preferred print. */
+  /* Temporary cashier: slightly tighter shop title for longer name. */
   body.cashier-simple h1 {
     font-size: 14px;
     letter-spacing: 0.2px;
     line-height: 1.25;
-  }
-  body.cashier-simple .daily-line,
-  body.cashier-simple .table-line {
-    border: none;
-    padding: 1px 0;
-    margin: 0 0 2px;
-  }
-  body.cashier-simple .total {
-    border: none;
-    padding: 4px 0;
-    margin-top: 4px;
-  }
-  body.cashier-simple .grand {
-    border-top: none;
-    padding-top: 2px;
-    margin-top: 2px;
-  }
-  body.cashier-simple hr,
-  body.cashier-simple .web {
-    border: none;
-  }
-  body.cashier-simple thead td {
-    border: none;
-    border-bottom: none;
-    padding-bottom: 2px;
-  }
-  body.cashier-simple tbody td {
-    border-bottom: none;
-  }
-  body.cashier-simple .write-space {
-    border-top: none;
   }
 </style>
 </head>

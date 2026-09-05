@@ -488,7 +488,10 @@ describe("kitchen ticket layout", () => {
     expect(customer).toContain("Oven bakened Pasta with Extra Cheese Topping");
     expect(customer).not.toContain(">Subtotal<");
     expect(customer).toContain("TOTAL");
-    expect(customer).toContain("body.cashier-simple .daily-line");
+    // No decorative boxes/lines on any slip.
+    expect(customer).not.toMatch(/\.daily-line\s*\{[^}]*border:\s*1/);
+    expect(customer).not.toMatch(/\.total\s*\{[^}]*border:\s*1/);
+    expect(customer).not.toMatch(/tbody td\s*\{[^}]*border-bottom:/);
 
     const withDiscount = ensureReceiptItemNames({
       ...order,
@@ -498,6 +501,34 @@ describe("kitchen ticket layout", () => {
     const discounted = buildCustomerReceiptHtml(withDiscount, null);
     expect(discounted).toContain("Subtotal");
     expect(discounted).toContain("Discount");
+  });
+
+  it("phone orders show Phone Order after the daily number", () => {
+    const order = ensureReceiptItemNames({
+      ...baseOrder([
+        {
+          id: "i1",
+          created_at: "",
+          updated_at: "",
+          order_id: "ord-1",
+          product_id: "p1",
+          product_size_id: "s1",
+          quantity: 1,
+          price: 550,
+          product_name: "Oven bakened Pasta",
+        },
+      ]),
+      order_type: "phone",
+      daily_number: 4,
+      customer_name: "Ali",
+      phone: "03001234567",
+      address: "Street 1",
+    });
+    const customer = buildCustomerReceiptHtml(order, null);
+    const kitchen = buildKitchenReceiptHtml(order, null);
+    expect(customer).toContain("Order #4 · Phone Order");
+    expect(kitchen).toContain("Order #4 · Phone Order");
+    expect(customer).not.toMatch(/\.daily-line\s*\{[^}]*border:\s*1/);
   });
 });
 
