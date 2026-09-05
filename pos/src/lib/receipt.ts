@@ -504,7 +504,8 @@ export function buildKitchenReceiptHtml(
   const service = kitchenOrderTypeLabel(order.order_type, order.order_notes);
   const layout = parseReceiptLayout(settings?.receipt_layout).kitchen;
 
-  const itemsTable = `<table>
+  const itemsTable = `<hr class="thin" />
+  <table>
     <colgroup>
       <col class="col-item" />
       <col class="col-qty" />
@@ -515,6 +516,13 @@ export function buildKitchenReceiptHtml(
         <td class="col-qty">Qty</td>
       </tr>
     </thead>
+  </table>
+  <hr class="thin" />
+  <table>
+    <colgroup>
+      <col class="col-item" />
+      <col class="col-qty" />
+    </colgroup>
     <tbody>
       ${
         itemsHtml ||
@@ -653,8 +661,6 @@ export function buildKitchenReceiptHtml(
     font-weight: 600;
     font-size: 12px;
     padding: 3px 0;
-    border-top: 1px solid #444;
-    border-bottom: 1px solid #444;
   }
   tbody td {
     padding: 4px 0;
@@ -725,6 +731,16 @@ export function buildKitchenReceiptHtml(
     padding: 3px 0;
     margin: 0 0 4px;
     text-transform: uppercase;
+  }
+  hr.thin {
+    display: block;
+    border: none;
+    border-top: 1px solid #000;
+    margin: 3px 0;
+    padding: 0;
+    height: 0;
+    transform: scaleY(0.4);
+    transform-origin: center;
   }
 </style>
 </head>
@@ -883,7 +899,8 @@ export function buildCustomerReceiptHtml(
     ? "Musa Cafe & Pizza Hut"
     : settings?.restaurant_name || shop.name;
 
-  const itemsTable = `<table>
+  const itemsTable = `<hr class="thin" />
+  <table>
     <colgroup>
       <col class="col-item" />
       <col class="col-qty" />
@@ -896,11 +913,20 @@ export function buildCustomerReceiptHtml(
         <td class="col-amt">Amt</td>
       </tr>
     </thead>
+  </table>
+  <hr class="thin" />
+  <table>
+    <colgroup>
+      <col class="col-item" />
+      <col class="col-qty" />
+      <col class="col-amt" />
+    </colgroup>
     <tbody>${lines}</tbody>
   </table>`;
 
   const showSubtotal = !cashierSimple || discount > 0;
-  const totalsHtml = `<div class="total">
+  const totalsHtml = `<hr class="thin" />
+  <div class="total">
     ${
       showSubtotal
         ? `<div class="line"><span>Subtotal</span><span>${formatPrice(order.subtotal, currency)}</span></div>`
@@ -1051,6 +1077,16 @@ export function buildCustomerReceiptHtml(
   hr {
     display: none;
   }
+  hr.thin {
+    display: block;
+    border: none;
+    border-top: 1px solid #000;
+    margin: 3px 0;
+    padding: 0;
+    height: 0;
+    transform: scaleY(0.4);
+    transform-origin: center;
+  }
   table {
     width: 100%;
     table-layout: fixed;
@@ -1065,8 +1101,6 @@ export function buildCustomerReceiptHtml(
     font-weight: 600;
     font-size: 12px;
     padding: 3px 1px 4px 0;
-    border-top: 1px solid #444;
-    border-bottom: 1px solid #444;
   }
   tbody td {
     padding: 4px 1px 4px 0;
@@ -1102,9 +1136,8 @@ export function buildCustomerReceiptHtml(
   }
   .inc { padding-left: 4px; }
   .total {
-    margin-top: 5px;
-    padding: 4px 0 0;
-    border-top: 1px solid #444;
+    margin-top: 0;
+    padding: 2px 0 0;
     font-size: 12px;
     font-weight: 400;
   }

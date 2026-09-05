@@ -638,11 +638,13 @@ async function processAction(
         await apiFetch(`/orders/${serverId}/cancel`, { method: "PATCH" });
       } catch (err) {
         if (isQueueableError(err)) throw err;
+        const msg = err instanceof ApiError ? err.message || "" : "";
+        // Idempotent void only — never drop a failed completed-order cancel.
         if (
           !(
             err instanceof ApiError &&
-            (err.status === 409 ||
-              /already|cancelled|not pending/i.test(err.message))
+            (err.status === 404 ||
+              (err.status === 409 && /already cancelled/i.test(msg)))
           )
         ) {
           throw err;

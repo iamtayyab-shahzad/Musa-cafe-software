@@ -531,12 +531,13 @@ func (s *OrderService) CancelOrder(id uuid.UUID) error {
 		tx.Rollback()
 		return nil
 	}
-	if order.OrderStatus == "COMPLETED" {
+	if order.OrderStatus != "PENDING" && order.OrderStatus != "COMPLETED" {
 		tx.Rollback()
-		return utils.NewAppError(http.StatusConflict, "completed orders cannot be cancelled")
+		return utils.NewAppError(http.StatusConflict, "order could not be cancelled")
 	}
 
-	affected, err := s.orderRepo.TransitionStatus(tx, id, "PENDING", "CANCELLED")
+	wasCompleted := order.OrderStatus == "COMPLETED"
+	affected, err := s.orderRepo.TransitionStatus(tx, id, order.OrderStatus, "CANCELLED")
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -544,6 +545,14 @@ func (s *OrderService) CancelOrder(id uuid.UUID) error {
 	if affected == 0 {
 		tx.Rollback()
 		return utils.NewAppError(http.StatusConflict, "order could not be cancelled")
+	}
+
+	// Voiding a completed sale must put recipe stock back on the shelf.
+	if wasCompleted {
+		if err := s.restoreInventory(tx, order); err != nil {
+			tx.Rollback()
+			return err
+		}
 	}
 
 	_ = tx.Model(&domain.Payment{}).
@@ -778,6 +787,45 @@ func (s *OrderService) consumeInventory(tx *gorm.DB, order *domain.Order) error 
 				InventoryID:   recipe.InventoryID,
 				QuantityBase:  -consumeQty,
 				Type:          domain.StockConsumption,
+				Reason:        reason,
+				ReferenceType: domain.RefOrder,
+				ReferenceID:   &orderID,
+			}); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+// restoreInventory reverses consumeInventory when a completed order is cancelled.
+func (s *OrderService) restoreInventory(tx *gorm.DB, order *domain.Order) error {
+	orderID := order.ID
+	reason := fmt.Sprintf("Order %s cancelled", order.OrderNumber)
+	if order.OrderNumber == "" {
+		reason = fmt.Sprintf("Order %s cancelled", order.ID.String())
+	}
+
+	productIDs := make([]uuid.UUID, 0, len(order.Items))
+	for _, item := range order.Items {
+		productIDs = append(productIDs, item.ProductID)
+	}
+	recipesByProduct, err := s.inventoryRepo.RecipeLinesForProducts(tx, productIDs)
+	if err != nil {
+		return err
+	}
+
+	for _, item := range order.Items {
+		recipes := pickRecipeLines(recipesByProduct[item.ProductID], item.ProductSizeID)
+		for _, recipe := range recipes {
+			restoreQty := recipe.QuantityRequired * int64(item.Quantity)
+			if restoreQty <= 0 {
+				continue
+			}
+			if _, err := s.inventoryRepo.ApplyMovement(tx, repository.Movement{
+				InventoryID:   recipe.InventoryID,
+				QuantityBase:  restoreQty,
+				Type:          domain.StockAdjustment,
 				Reason:        reason,
 				ReferenceType: domain.RefOrder,
 				ReferenceID:   &orderID,

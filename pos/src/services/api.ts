@@ -1216,9 +1216,10 @@ async function localSalesTotals() {
 }
 
 /**
- * Prefer the higher of local vs cloud so a till with empty IndexedDB still
- * shows completed sales that are already in the database (and a till with
- * unsynced local completes is not undercounted by a stale cloud total).
+ * Prefer local IndexedDB for the till's live book. Cloud can lag behind cancels
+ * and history edits — using max(local, cloud) would keep cancelled sales in
+ * today's total until sync catches up. Only fall back to cloud when this till
+ * has no completed sales for the window (empty/new browser).
  */
 async function bestSalesFigure(
   localTotal: number,
@@ -1229,21 +1230,19 @@ async function bestSalesFigure(
     return { total: localTotal, order_count: localCount };
   }
   try {
-    const cloud = await fetchCloud();
-    const cloudTotal = Number(cloud.total) || 0;
-    const cloudCount = Number(cloud.order_count) || 0;
-    if (cloudTotal > localTotal) {
-      return {
-        total: cloudTotal,
-        order_count: cloudCount > 0 ? cloudCount : localCount,
-      };
-    }
-    if (localTotal > cloudTotal) {
+    const orders = await listLocalOrders();
+    const hasUnsyncedTerminal = orders.some(
+      (o) =>
+        (o.sync_status === "pending_sync" || o.sync_status === "sync_failed") &&
+        (o.order_status === "COMPLETED" || o.order_status === "CANCELLED"),
+    );
+    if (hasUnsyncedTerminal || localCount > 0 || localTotal > 0) {
       return { total: localTotal, order_count: localCount };
     }
+    const cloud = await fetchCloud();
     return {
-      total: localTotal,
-      order_count: Math.max(localCount, cloudCount),
+      total: Number(cloud.total) || 0,
+      order_count: Number(cloud.order_count) || 0,
     };
   } catch {
     return { total: localTotal, order_count: localCount };

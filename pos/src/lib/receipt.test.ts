@@ -488,11 +488,10 @@ describe("kitchen ticket layout", () => {
     expect(customer).toContain("Oven bakened Pasta with Extra Cheese Topping");
     expect(customer).not.toContain(">Subtotal<");
     expect(customer).toContain("TOTAL");
-    // No boxes around order # / totals; only thin item + total separators.
+    // Thin hairline separators only (above/below item header + above total).
     expect(customer).not.toMatch(/\.daily-line\s*\{[^}]*border:\s*1/);
-    expect(customer).not.toMatch(/\.total\s*\{[^}]*border:\s*1[^p]/);
-    expect(customer).toMatch(/thead td\s*\{[^}]*border-top:\s*1px solid #444/);
-    expect(customer).toMatch(/\.total\s*\{[^}]*border-top:\s*1px solid #444/);
+    expect(customer).toContain("hr class=\"thin\"");
+    expect(customer).toMatch(/hr\.thin\s*\{[^}]*scaleY\(0\.4\)/);
     expect(customer).not.toMatch(/tbody td\s*\{[^}]*border-bottom:/);
 
     const withDiscount = ensureReceiptItemNames({

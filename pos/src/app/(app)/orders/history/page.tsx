@@ -25,6 +25,7 @@ import {
   makeLineKey,
   WALKIN_LOCATION_ID,
 } from "@/lib/utils";
+import { ordersShareIdentity } from "@/lib/order-identity";
 import { karachiYmd, karachiDayBoundsUtc } from "@/lib/local-sales";
 import { ordersApi, productsApi, settingsApi } from "@/services/api";
 import type { Order, OrderType, PaymentMethod } from "@/types";
@@ -147,11 +148,31 @@ export default function OrderHistoryPage() {
 
   const cancel = async (order: Order) => {
     try {
+      qc.setQueryData<Order[]>(["orders"], (old) =>
+        (old || []).map((o) =>
+          ordersShareIdentity(o, order)
+            ? { ...o, order_status: "CANCELLED" as const }
+            : o,
+        ),
+      );
+      qc.setQueryData<Order[]>(["orders", "pending"], (old) =>
+        (old || []).filter((o) => !ordersShareIdentity(o, order)),
+      );
       await ordersApi.cancel(order.id);
       toast.success("Order cancelled");
-      qc.invalidateQueries({ queryKey: ["orders"] });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["orders"] }),
+        qc.invalidateQueries({ queryKey: ["orders", "pending"] }),
+        qc.invalidateQueries({ queryKey: ["analytics"] }),
+        qc.invalidateQueries({ queryKey: ["dashboard"] }),
+        qc.invalidateQueries({ queryKey: ["inventory"] }),
+      ]);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed");
+      void Promise.all([
+        qc.invalidateQueries({ queryKey: ["orders"] }),
+        qc.invalidateQueries({ queryKey: ["analytics"] }),
+      ]);
     }
   };
 
@@ -332,17 +353,17 @@ export default function OrderHistoryPage() {
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {order.order_status === "PENDING" && (
-                    <>
-                      <Button onClick={() => complete(order)}>Complete</Button>
-                      <Button
-                        variant="danger"
-                        onClick={() => setCancelTarget(order)}
-                      >
-                        Cancel
-                      </Button>
-                    </>
-                  )}
+                  {order.order_status === "PENDING" ? (
+                    <Button onClick={() => complete(order)}>Complete</Button>
+                  ) : null}
+                  {order.order_status !== "CANCELLED" ? (
+                    <Button
+                      variant="danger"
+                      onClick={() => setCancelTarget(order)}
+                    >
+                      Cancel
+                    </Button>
+                  ) : null}
                   {allowHistoryEdit && order.order_status !== "CANCELLED" ? (
                     <Button variant="secondary" onClick={() => edit(order)}>
                       Edit
