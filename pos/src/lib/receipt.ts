@@ -543,7 +543,10 @@ export function buildKitchenReceiptHtml(
             ? styledBlock(block, "daily-big", escapeHtml(heading))
             : "";
         }
-        case "table_service":
+        case "table_service": {
+          if (parseServiceMode(order.order_notes) === "parcel") {
+            return styledBlock(block, "table-big", "PARCEL");
+          }
           return table
             ? styledBlock(
                 block,
@@ -551,6 +554,7 @@ export function buildKitchenReceiptHtml(
                 `TABLE ${escapeHtml(table)}, ${escapeHtml(service)}`,
               )
             : styledBlock(block, "service-big", escapeHtml(service));
+        }
         case "banner":
           return styledBlock(
             block,
@@ -951,7 +955,10 @@ export function buildCustomerReceiptHtml(
             ? styledBlock(block, "daily-line", escapeHtml(heading))
             : "";
         }
-        case "table":
+        case "table": {
+          if (parseServiceMode(order.order_notes) === "parcel") {
+            return styledBlock(block, "table-line", "PARCEL");
+          }
           return tableNo
             ? styledBlock(
                 block,
@@ -959,6 +966,7 @@ export function buildCustomerReceiptHtml(
                 `TABLE ${escapeHtml(tableNo)}`,
               )
             : "";
+        }
         case "phone_datetime": {
           const meta = [shopPhone, datePart, timePart]
             .filter(Boolean)

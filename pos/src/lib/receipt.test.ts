@@ -323,8 +323,13 @@ describe("kitchen ticket layout", () => {
       },
     );
     const kitchen = buildKitchenReceiptHtml(order, preferredSettings());
-    expect(kitchen).toContain("Parcel");
+    const customer = buildCustomerReceiptHtml(order, preferredSettings());
+    expect(kitchen).toContain("PARCEL");
+    expect(customer).toContain("PARCEL");
+    expect(kitchen).toContain("table-big");
+    expect(customer).toContain("table-line");
     expect(kitchen).not.toContain("TABLE ");
+    expect(customer).not.toContain("TABLE ");
   });
 
   it("puts quantity on the right and uses normal weight", () => {
